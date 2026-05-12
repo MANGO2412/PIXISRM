@@ -1,0 +1,174 @@
+import {View,Image,StyleSheet,StyleProp,ViewStyle} from "react-native"
+import {FC,useContext} from "react"
+import {Text,Button,ButtonIcon} from "@/components/ui"
+import {EllipsisVertical} from "lucide-react-native"
+import { useRouter } from 'expo-router';
+import {SongContext} from "@/context/song/song-context"
+import {type Song} from "@/interface/song"
+
+import {WEB_REMIX} from "@/constant/clientYoutube"
+import {URL_API_YOUTUBE} from "@/constant/initialValue"
+import {NextResponse} from "@/interface/next"
+
+import {GlobalContext} from "@/context/reduceContext";
+import {getParams,getPlaylist} from "@/utils/playlistExtractor"
+import type {PlayList} from "@/interface/playlist"
+
+import {fetchStreamData,getSourceFromFormats} from '@/utils/fetchStramData'
+import {usePlayerContext} from "@/context/player/player-context"
+
+
+
+
+const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDetail?:boolean}>=({thumbnail,videoId,artist,title,style,options,showDetail})=>{
+    let navigation=useRouter()
+    const {updateSong}=useContext(SongContext)
+    const {dispatch}=useContext(GlobalContext)
+    const {player,setSelectSongPlaying}=usePlayerContext()
+
+    async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
+        try {
+            const response=await fetch(`${URL_API_YOUTUBE}next`,{
+                    method:"POST",
+                    headers:{
+                      "Content-Type":"application/json",
+                      "X-Goog-FieldMask":"contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer.content.musicQueueRenderer.content.playlistPanelRenderer(continuations,contents(automixPreviewVideoRenderer,playlistPanelVideoRenderer(title,navigationEndpoint,longBylineText,shortBylineText,thumbnail,lengthText)))",
+                      "X-Goog-Api-Key":"AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+                    },
+                    body:JSON.stringify({
+                        context:{
+                            client:WEB_REMIX
+                        },
+                       "isAudioOnly": true,
+                       "playlistId":playlistId,
+                       "tunerSettingValue":"AUTOMIX_SETTING_NORMAL",
+                       "index": null,
+                       "params":  params,
+                       "playlistSetVideoId": null,
+                      "watchEndpointMusicSupportedConfigs":{
+                         "musicVideoType":"MUSIC_VIDEO_TYPE_ATV"
+                      },
+                      "videoId":videoId
+                    })
+            })
+            const data:NextResponse=await response.json()
+            return data;
+        } catch (error) {
+            console.error("fatch error response",error)
+        }
+    }
+
+    async function reloadPlaylist(){
+          const nextPageData =await fetchNex({videoId})
+          const {playlistId,params}=getParams({nextResponse:nextPageData})
+          const nextPageRaw=await fetchNex({videoId,playlistId,params})
+          const playlistData=getPlaylist({nextResponse:nextPageRaw}) 
+          let playlist:PlayList[]=[]
+          
+          const CONCURRENT_LIMIT = 3
+          let currentIndex = 0
+
+
+          async function worker(){
+              if(!playlistData) return;
+
+              while(currentIndex < playlistData?.length ){
+                    const index = currentIndex++
+                    const elem = playlistData[index]
+                    if (!elem?.song?.videoId) continue
+                    const responseUrl =await fetchStreamData(
+                          elem.song.videoId
+                    )
+
+
+                  playlist[index] = {
+                    ...elem,
+                    song: {
+                        ...elem.song,
+                        url:
+                            getSourceFromFormats(
+                                responseUrl?.streamingData?.adaptiveFormats
+                            ) || ""
+                    }
+                  }
+              }
+          }
+
+          
+          await Promise.all(
+            Array.from(
+              {length:CONCURRENT_LIMIT},
+              ()=>worker()
+            )
+          )
+          // await Promise.all(
+          //   getPlaylist({nextResponse:nextPageRaw})?.map(async (elem)=>{ 
+          //   console.log(elem?.song.videoId)
+          //    await delay(500)
+          //   const responseUrl=await fetchStreamData(elem?.song.videoId || "") 
+          //   return {
+          //     ...elem,
+          //     song:{
+          //       ...elem?.song,
+          //       url:getSourceFromFormats(responseUrl?.streamingData.adaptiveFormats) || ""
+          //     }
+          //   }
+           
+          // })||[]);
+          console.log(playlist)
+          dispatch({ type: "SET_PLAYLIST", payload: playlist.filter(Boolean) });
+    }
+
+    const playSong=async()=>{
+       
+        if(showDetail){
+          navigation.navigate("/playedsong")
+        }else{
+          player?.replace(""); 
+          dispatch({ type: "SET_PLAYLIST", payload: [] });
+          const url=getSourceFromFormats((await fetchStreamData(videoId || ""))?.streamingData?.adaptiveFormats) || ""
+          console.log("select url",url)
+          setSelectSongPlaying({thumbnail,videoId,artist,title,url})  
+          navigation.navigate("/playedsong");
+          reloadPlaylist()
+        }      
+    }
+
+
+    return(
+      <View style={[styles.container,style]}>
+        <View style={styles.container} onTouchEnd={playSong}>
+          <Image style={styles.image}  source={{uri:thumbnail}}/>
+          <View style={styles.info} >
+              <Text   size="lg" className="color-typography-950" > {title.length>20?title.substring(0,20)+"...":title}</Text>
+              <Text size="sm">{artist.name}</Text>
+          </View>
+        </View>
+        {options && (
+          <Button variant="link"  className="rounded-full p-3.5 " size="lg" onPress={()=>{navigation.navigate("/songoptions"); updateSong({thumbnail,videoId,artist,title})}} >
+            <ButtonIcon size="lg"   as={EllipsisVertical} className="color-typography-800"     />
+          </Button>
+        )}
+      </View>
+    )
+}
+
+
+export default SongItem;
+const styles=StyleSheet.create({
+    container:{
+      display:"flex",
+      flexDirection:"row"
+    },
+    image:{
+        borderRadius:9,
+        width:60,
+        height:60
+    },
+    info:{
+        width:260,
+        padding:10
+    }
+})
+
+

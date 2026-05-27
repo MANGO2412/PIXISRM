@@ -3,6 +3,7 @@ import type {NextResponse} from '@/interface/next'
 import type {Lyrics,LyricsResponse} from "@/interface/lyrics"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 
 
 const getBrowseidLyrics=(value:NextResponse)=>{
@@ -19,6 +20,8 @@ const useLyrics=({ videoId }: { videoId: string  })=>{
       const getLyrics=async()=>{
         setIsLoading(true)
         try {
+            const visitorData = await Storage.getItem('visitorData');
+            WEB_REMIX.visitorData = visitorData;
             //next  response
             const responseNext = await fetch(`${URL_API_YOUTUBE}next`,{
                  method:"POST",
@@ -73,7 +76,7 @@ const useLyrics=({ videoId }: { videoId: string  })=>{
         setIsLoading(false)
       }
       getLyrics()
-    },[])
+    },[videoId])
 
     return {lyrics,isLoading}
 }

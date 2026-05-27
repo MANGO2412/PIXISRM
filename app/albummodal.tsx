@@ -15,7 +15,6 @@ import {useContext,useState } from "react";
 import type { Album } from "@/interface/album";
 import type { Song } from "@/interface/song";
 import {GlobalContext} from "@/context/reduceContext";
-import {SongContext} from "@/context/song/song-context"
 import {PlayList} from "@/interface/playlist"
 import {
     useRouter,
@@ -30,19 +29,18 @@ import {usePlayerContext} from "@/context/player/player-context"
 export default function AlbumModal() {
     const { browseId, params } = useLocalSearchParams<{ browseId: string; params?: string }>();
     const { albumContent, releaseAlbum } = useAlbumPage({ browseId: browseId, params:params });
-    const {updateSong}=useContext(SongContext)
     const {dispatch}=useContext(GlobalContext)
     let navigation=useRouter()
     const [isPressed, setIsPressed] = useState(false)
-    const {player,selectSongPlaying}=usePlayerContext()
+    const {player,selectSongPlaying,setSelectSongPlaying}=usePlayerContext()
     
    const reloadplaylist=async(item: Song)=>{
-    player?.replace(""); 
+   
     const url=getSourceFromFormats((await fetchStreamData(item.videoId || ""))?.streamingData?.adaptiveFormats) || ""
-      updateSong({
+    setSelectSongPlaying({
         ...item,
         url
-      })
+    })
 
     let playlist:PlayList[]=[]
      const CONCURRENT_LIMIT = 3
@@ -82,10 +80,11 @@ export default function AlbumModal() {
       )
 
       dispatch({ type: "SET_PLAYLIST", payload: playlist });
-
    }
 
     const playSong=(item: Song)=>{
+        player?.replace("");
+        dispatch({ type: "SET_PLAYLIST", payload: [] }); 
         navigation.navigate("/playedsong");
         reloadplaylist(item)
     }

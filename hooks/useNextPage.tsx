@@ -2,6 +2,7 @@ import {useState,useEffect,useRef} from "react"
 import {NextResponse} from "@/interface/next"
 import {WEB_REMIX} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
+import Storage from 'expo-sqlite/kv-store';
 
 
 export default function useNextPage({params,videoId,playlistId}:{params?:string,videoId?:string,playlistId?:string}){
@@ -10,6 +11,8 @@ export default function useNextPage({params,videoId,playlistId}:{params?:string,
     useEffect(()=>{   
         async function fetchNex() {
             try {
+                const visitorData = await Storage.getItem('visitorData');
+                WEB_REMIX.visitorData = visitorData;
                 const response=await fetch(`${URL_API_YOUTUBE}next`,{
                         method:"POST",
                         headers:{

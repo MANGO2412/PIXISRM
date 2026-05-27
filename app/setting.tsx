@@ -4,7 +4,7 @@ import {Text} from "@/components/ui"
 export default function setting (){
  return(
     <View style={styles.container}>
-      <Text>Setting</Text>
+      <Text>AUn esta en desarrollo, estara listo muy pronto</Text>
     </View>
  )
 }

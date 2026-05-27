@@ -21,6 +21,7 @@ import {getParams,getPlaylist} from "@/utils/playlistExtractor"
 import {fetchStreamData,getSourceFromFormats} from '@/utils/fetchStramData'
 import {usePlayerContext} from "@/context/player/player-context"
 import type {PlayList} from "@/interface/playlist"
+import Storage from 'expo-sqlite/kv-store';
 
 
 
@@ -38,6 +39,8 @@ export default function ArtistModal({artist}: ArtistModalProps) {
 
     async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
            try {
+               const visitorData = await Storage.getItem('visitorData');
+               WEB_REMIX.visitorData = visitorData || "";
                const response=await fetch(`${URL_API_YOUTUBE}next`,{
                        method:"POST",
                        headers:{

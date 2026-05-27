@@ -40,7 +40,6 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
   
 
     useEffect(()=>{
-        console.log(!player || !selectSongPlaying || player.isLoaded)
         if (!player || !selectSongPlaying || player.isLoaded) return  
         console.log("url from  the footerplayer",selectSongPlaying.url)   
         player.replace(selectSongPlaying?.url || "")
@@ -72,7 +71,7 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             
 
-            if((currentSong?.index|| 0)+1<=state.playlist.length){
+            if((currentSong?.index|| 0)+1<state.playlist.length){
                 const nextSong=state.playlist[(currentSong?.index|| 0)+1]
                 player?.replace("")
                 setUpdateLockScreen(true)

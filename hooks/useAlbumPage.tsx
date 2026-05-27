@@ -6,9 +6,12 @@ import type {Artist} from "@/interface/artist"
 
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 
 async function fetchPlaylist(playlistid:string){
     try {
+        const visitorData = await Storage.getItem('visitorData');
+        WEB_REMIX.visitorData = visitorData || "";
         const response = await fetch(`${URL_API_YOUTUBE}browse?prettyPrint=false`,{
             method:"POST",
             headers:{
@@ -118,6 +121,8 @@ export  default function useAlbumPage({browseId,params}:{browseId:string,params?
   useEffect(()=>{
     const fetchAlbumData=async()=>{
         try {
+            const visitorData = await Storage.getItem('visitorData');
+            WEB_REMIX.visitorData = visitorData || "";
             const response = await fetch(`${URL_API_YOUTUBE}browse?prettyPrint=false`,{
                 method:"POST",
                 headers:{

@@ -1,12 +1,12 @@
 import {View,StyleSheet,ScrollView, ActivityIndicator} from "react-native"
-import { SongContext } from "@/context/song/song-context"
-import {useContext} from "react"
 import {Text} from "@/components/ui"
 import useLyrics from "@/hooks/useLyrics";
+import {usePlayerContext} from "@/context/player/player-context"
+
 
 const Lyrics=()=>{
-    const {selectSong}=useContext(SongContext)
-    const {lyrics,isLoading}=useLyrics({videoId:selectSong?.videoId||""})
+    const {selectSongPlaying}=usePlayerContext()
+    const {lyrics,isLoading}=useLyrics({videoId:selectSongPlaying?.videoId||""})
 
     if(isLoading){
         return(

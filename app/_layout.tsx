@@ -1,13 +1,17 @@
 import { Stack } from "expo-router";
-import { useColorScheme} from "react-native";
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
-import LogoHeader,{RightActionHeader} from '@/components/custome/LogoHeader'
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SQLiteProvider } from 'expo-sqlite';
+import LogoHeader,{RightActionHeader,RightActionHeaderPlaylist} from '@/components/custome/LogoHeader'
 import SearchHeader from "@/components/custome/SearchHeader"
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import {SongProvider} from "@/context/song/provider-context"
 import {GlobalProvider} from "@/context/reduceContext"
 import {PlayerProvider} from "@/context/player/player-context"
+import migrateDbIfNeeded from "@/utils/migrateDbIfNeeded"
+
+
 
 import '@/global.css';
 
@@ -16,8 +20,9 @@ import '@/global.css';
 export default function RootLayout(){
     // const colorScheme=useColorScheme()
     return (
-    //  <GestureHandlerRootView style={{flex:1}}>
-         <GluestackUIProvider mode="dark">
+     <GestureHandlerRootView style={{flex:1}}>
+        <SQLiteProvider databaseName="pixisrm.db" onInit={migrateDbIfNeeded}>
+           <GluestackUIProvider mode="dark">
            <ThemeProvider value={DarkTheme}>
               <SongProvider>
               <GlobalProvider>
@@ -39,6 +44,7 @@ export default function RootLayout(){
                        name="setting"
                        options={{
                            presentation:"modal",
+                           headerTitle:"Configuracion"
                        }}
                      />
 
@@ -59,7 +65,17 @@ export default function RootLayout(){
                               
                       }} 
                      />
+
+                    <Stack.Screen
+                     name="playlistcontent"
+                     options={{
+                        presentation: "card",
+                        headerTitle:"",         
+                     }} 
+                    />
+
                     
+              
                     <Stack.Screen
                         name="artistmodal"
                         options={{
@@ -109,6 +125,7 @@ export default function RootLayout(){
                       options={{
                           presentation:"formSheet",
                           sheetCornerRadius: 40,
+                          sheetAllowedDetents: [1.0],
                           contentStyle:{backgroundColor:"#343738"}
                       }}
                     />
@@ -128,7 +145,8 @@ export default function RootLayout(){
               </SongProvider>
               </ThemeProvider>
          </GluestackUIProvider>
-    //  </GestureHandlerRootView>    
+        </SQLiteProvider>
+     </GestureHandlerRootView>    
   
     )
 }

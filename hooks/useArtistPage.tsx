@@ -6,6 +6,7 @@ import type {PlaylistArtist} from "@/interface/playlist"
 
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 import {useState,useEffect} from "react"
 
 
@@ -129,6 +130,8 @@ export default function useArtistPage({ browseId }: { browseId: string  }) {
     const fetchArtistData = async () => {
       setLoading(true);
       try {
+        const visitorData = await Storage.getItem('visitorData');
+        WEB_REMIX.visitorData = visitorData || "";
         const response = await fetch(`${URL_API_YOUTUBE}browse?prettyPrint=false`,{
             method:"POST",
             headers:{

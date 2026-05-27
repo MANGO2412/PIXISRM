@@ -3,6 +3,7 @@ import {ANDROID_VR} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 
 import type {PlayerResponse} from "@/interface/player"
+import Storage from 'expo-sqlite/kv-store';
 
 export default function usePlayerPage(videoId:string){
     const [relatedSongs,setRelatedSongs]=useState<PlayerResponse>()
@@ -11,6 +12,8 @@ export default function usePlayerPage(videoId:string){
         async function fetchRelatedSongs(){
             console.log("Fetching related songs for videoId:", videoId)
             try{
+                const visitorData = await Storage.getItem('visitorData');
+                ANDROID_VR.visitorData = visitorData;
                 const response=await fetch(`${URL_API_YOUTUBE}player?prettyPrint=false`,{
                     method:"POST",
                     headers:{

@@ -20,7 +20,7 @@ export const extractSongData = (item: MusicResponsiveListItemRenderer): Song | n
         let artistName = "";
         let artistBrowserId = "";
         let albumName = "";
-        let duration = "";
+        let albumBrowseId = "";
 
         for (let i = 0; i < infoRuns.length; i++) {
             const run = infoRuns[i];
@@ -32,8 +32,7 @@ export const extractSongData = (item: MusicResponsiveListItemRenderer): Song | n
                 artistBrowserId = run.navigationEndpoint.browseEndpoint.browseId;
             } else if (run.navigationEndpoint?.browseEndpoint) {
                 albumName = run.text;
-            } else if (/^\d+:\d+$/.test(run.text)) {
-                duration = run.text;
+                albumBrowseId=run.navigationEndpoint.browseEndpoint.browseId
             }
         }
 
@@ -43,6 +42,10 @@ export const extractSongData = (item: MusicResponsiveListItemRenderer): Song | n
             artist: {
                 browseId: artistBrowserId,
                 name: artistName
+            },
+            album:{
+               browseId:albumBrowseId,
+               title:albumName
             },
             title
         };

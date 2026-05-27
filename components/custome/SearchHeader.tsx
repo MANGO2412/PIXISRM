@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 
 
 export default function SearchHeader({children,tintColor,openScreen}:{children: string; tintColor?: string | undefined;openScreen?:boolean }){
@@ -29,6 +30,8 @@ export default function SearchHeader({children,tintColor,openScreen}:{children: 
    const handleSearch=async (text:string)=>{
      setSearchValue(text);
      try{
+        const visitorData = await Storage.getItem('visitorData');
+        WEB_REMIX.visitorData = visitorData || "";
         const response=await fetch(URL_API_YOUTUBE+"music/get_search_suggestions?prettyPrint=false",{
                  method:"POST",
                  headers:{

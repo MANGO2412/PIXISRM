@@ -1,4 +1,11 @@
-import {View,Image,StyleSheet,StyleProp,ViewStyle} from "react-native"
+import {
+  View,
+  Image,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  Pressable
+} from "react-native"
 import {FC,useContext} from "react"
 import {Text,Button,ButtonIcon} from "@/components/ui"
 import {EllipsisVertical} from "lucide-react-native"
@@ -9,6 +16,7 @@ import {type Song} from "@/interface/song"
 import {WEB_REMIX} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {NextResponse} from "@/interface/next"
+import Storage from 'expo-sqlite/kv-store';
 
 import {GlobalContext} from "@/context/reduceContext";
 import {getParams,getPlaylist} from "@/utils/playlistExtractor"
@@ -20,7 +28,7 @@ import {usePlayerContext} from "@/context/player/player-context"
 
 
 
-const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDetail?:boolean}>=({thumbnail,videoId,artist,title,style,options,showDetail})=>{
+const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDetail?:boolean,customPlay?:() => Promise<void>}>=({thumbnail,videoId,artist,album,title,style,options,showDetail,customPlay})=>{
     let navigation=useRouter()
     const {updateSong}=useContext(SongContext)
     const {dispatch}=useContext(GlobalContext)
@@ -28,6 +36,8 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
 
     async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
         try {
+            const visitorData = await Storage.getItem('visitorData');
+            WEB_REMIX.visitorData = visitorData || "";
             const response=await fetch(`${URL_API_YOUTUBE}next`,{
                     method:"POST",
                     headers:{
@@ -115,7 +125,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
           //   }
            
           // })||[]);
-          console.log(playlist)
+          // console.log(playlist)
           dispatch({ type: "SET_PLAYLIST", payload: playlist.filter(Boolean) });
     }
 
@@ -137,16 +147,16 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
 
     return(
       <View style={[styles.container,style]}>
-        <View style={styles.container} onTouchEnd={playSong}>
+        <Pressable style={styles.container} onPress={customPlay?customPlay:playSong}>
           <Image style={styles.image}  source={{uri:thumbnail}}/>
           <View style={styles.info} >
               <Text   size="lg" className="color-typography-950" > {title.length>20?title.substring(0,20)+"...":title}</Text>
               <Text size="sm">{artist.name}</Text>
           </View>
-        </View>
+        </Pressable>
         {options && (
-          <Button variant="link"  className="rounded-full p-3.5 " size="lg" onPress={()=>{navigation.navigate("/songoptions"); updateSong({thumbnail,videoId,artist,title})}} >
-            <ButtonIcon size="lg"   as={EllipsisVertical} className="color-typography-800"     />
+          <Button variant="link"  className="rounded-full p-3.5 " size="lg" onPress={()=>{navigation.navigate("/songoptions"); updateSong({thumbnail,videoId,artist,title,album})}} >
+            <ButtonIcon size="lg"   as={EllipsisVertical} className="color-typography-800 "     />
           </Button>
         )}
       </View>
@@ -158,7 +168,8 @@ export default SongItem;
 const styles=StyleSheet.create({
     container:{
       display:"flex",
-      flexDirection:"row"
+      flexDirection:"row",
+      justifyContent:"space-between",
     },
     image:{
         borderRadius:9,

@@ -1,5 +1,6 @@
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 
 import { useEffect, useState} from "react"
 import type {SearchResultResponse} from "@/interface/searchResult"
@@ -16,6 +17,8 @@ export default function useSearchPage({query}:{query:string}){
         async function fetchSearchResults() {
             setLoading(true);
             try {
+                const visitorData = await Storage.getItem('visitorData');
+                WEB_REMIX.visitorData = visitorData || "";
                 const response = await fetch(URL_API_YOUTUBE+"search?prettyPrint=false",{
                     method: "POST",
                     headers: {

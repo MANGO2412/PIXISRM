@@ -13,7 +13,7 @@ export default function SearchResults() {
         <View style={styles.container}>
             <ScrollView>
                 {songs.map((song,index)=>(
-                    <SongItem  key={index} style={{marginBottom:12}} {...song} />
+                    <SongItem  key={index} style={{marginBottom:12}} {...song} options/>
                 ))}
             </ScrollView>
             <FooterPlayer notViewWithMenu/>

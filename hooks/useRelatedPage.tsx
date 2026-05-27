@@ -5,6 +5,7 @@ import {nextResponse} from "@/interface/next"
 
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {WEB_REMIX} from "@/constant/clientYoutube"
+import Storage from 'expo-sqlite/kv-store';
 
 //tyopes to extracted info about songs, albums and artists from related page
 import {type Song} from "@/interface/song"
@@ -20,8 +21,12 @@ function formattedtoSong (item?:MusicResponsiveListItemRenderer | undefined):Son
         const videoId=item.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint.watchEndpoint?.videoId||""
         const title=item.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||""
         const thumbnailUrl=item.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails[0].url||""
+       
         const artistName=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||""
         const browseId=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint?.browseEndpoint?.browseId||""
+
+        const album=item.flexColumns.find(item=>item.musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint.browseEndpoint?.browseEndpointContextSupportedConfigs.browseEndpointContextMusicConfig.pageType=="MUSIC_PAGE_TYPE_ALBUM")
+
      
         return {
             videoId:videoId,
@@ -29,6 +34,10 @@ function formattedtoSong (item?:MusicResponsiveListItemRenderer | undefined):Son
             artist:{
                 name:artistName,
                 browseId:browseId
+            },
+            album:{
+              title:album?.musicResponsiveListItemFlexColumnRenderer.text.runs[0].text || "Uknown Album",
+              browseId:album?.musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint.browseEndpoint?.browseId || ""
             },
             thumbnail:thumbnailUrl
         }
@@ -88,31 +97,33 @@ export default function useRelatedPage({videoid}:{videoid:string}){
     const [relatedAlbums,setRelatedAlbums]=useState<Album[] | null>([])
     const [relatedArtists,setRelatedArtists]=useState<Artist[] | null>([])
 
-    useEffect(()=>{
-       async function fetchRelatedPage(){
-        try{
-           const response=await fetch(URL_API_YOUTUBE+"next?prettyPrint=false",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json",
-                "X-Goog-FieldMask":"contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)",
-                "X-Goog-Api-Key":"AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
-           },
-            body:JSON.stringify({
-                context:{
-                    client:WEB_REMIX
-                },
-                videoId:videoid,
-                isAudioOnly:false,
-                playlistSetVideoId:null,
-                tunnerSettingValue:"AUTOMIX_SETTING_NORMAL",
-                index:null,
-                params:null,
-                watchEndpointMusicSupportedConfigs:{
-                  musicVideoType : "MUSIC_VIDEO_TYPE_ATV"
-                }
+     useEffect(()=>{
+        async function fetchRelatedPage(){
+         try{
+            const visitorData = await Storage.getItem('visitorData');
+            WEB_REMIX.visitorData = visitorData || "";
+            const response=await fetch(URL_API_YOUTUBE+"next?prettyPrint=false",{
+             method:"POST",
+             headers:{
+                 "Content-Type":"application/json",
+                 "X-Goog-FieldMask":"contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs.tabRenderer(endpoint,title)",
+                 "X-Goog-Api-Key":"AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+            },
+             body:JSON.stringify({
+                 context:{
+                     client:WEB_REMIX
+                 },
+                 videoId:videoid,
+                 isAudioOnly:false,
+                 playlistSetVideoId:null,
+                 tunnerSettingValue:"AUTOMIX_SETTING_NORMAL",
+                 index:null,
+                 params:null,
+                 watchEndpointMusicSupportedConfigs:{
+                   musicVideoType : "MUSIC_VIDEO_TYPE_ATV"
+                 }
+             })
             })
-           })
 
 
           const data:nextResponse=await response.json()
@@ -142,6 +153,8 @@ export default function useRelatedPage({videoid}:{videoid:string}){
                                         tabs.find(tab=>tab.tabRenderer.title=="Related")?.tabRenderer.endpoint?.browseEndpoint.browseId                     
                 if(!browseId)return
 
+                const visitorData = await Storage.getItem('visitorData');
+                WEB_REMIX.visitorData = visitorData || "";
                 const response=await fetch(URL_API_YOUTUBE+"browse?prettyPrint=false",{
                     method:"POST",
                     headers:{

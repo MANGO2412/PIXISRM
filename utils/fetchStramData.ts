@@ -1,9 +1,12 @@
 import {ANDROID_VR} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import type {PlayerResponse} from "@/interface/player"
+import Storage from 'expo-sqlite/kv-store';
 
 export async  function  fetchStreamData(videoId:string):Promise<PlayerResponse | null>{
     try {
+        const visitorData = await Storage.getItem('visitorData') || "";
+        ANDROID_VR.visitorData = visitorData;
         const response=await fetch(`${URL_API_YOUTUBE}player?prettyPrint=false`,{
             method:"POST",
             headers:{

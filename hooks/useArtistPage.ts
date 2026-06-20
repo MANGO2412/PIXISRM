@@ -20,10 +20,12 @@ function extractMusicData(musicShelf: YTMusicShelfRenderer| undefined):Song[]{
             videoId:music.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint.videoId,
             playlistId:music.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint.playlistId,                                                                                             
             title:music.flexColumns.find(item=>item.musicResponsiveListItemFlexColumnRenderer.text?.runs?.[0].navigationEndpoint?.watchEndpoint?.watchEndpointMusicSupportedConfigs?.watchEndpointMusicConfig?.musicVideoType==="MUSIC_VIDEO_TYPE_ATV")?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].text || "Unknown Title",
-            artist:{
-              name:artistinfo?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].text || "Unknown Artist",
-              browseId:artistinfo?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].navigationEndpoint?.browseEndpoint?.browseId 
-            },
+            artist:artistinfo?.musicResponsiveListItemFlexColumnRenderer.text.runs?.filter(elem=>elem.text !=' & ').map(elem=>{
+              return {
+                name:elem.text,
+                browseId:elem.navigationEndpoint?.browseEndpoint?.browseId
+              }
+            })
         } 
     }) as Song[]
 }
@@ -65,7 +67,7 @@ function extractSinglesAndEps(singlesAndEpsCarousel:YTMusicCarouselShelfRenderer
         thumbnail:playlist.thumbnailRenderer.musicThumbnailRenderer.thumbnail.thumbnails[0].url,
         browseId:playlist.navigationEndpoint.browseEndpoint?.browseId,
         title:playlist.title.runs[0].text,
-        subtitle:playlist.title.runs[0].text
+        subtitle: playlist.title.runs[0].text
       }
    }) as PlaylistArtist[]
 }
@@ -74,8 +76,7 @@ function extractArtistData(data: YTMusicResponse):Artist{
   const header=data.header?.musicImmersiveHeaderRenderer
   const content=data.contents.singleColumnBrowseResultsRenderer?.tabs[0].tabRenderer.content.sectionListRenderer.contents;   
   const carrouselContent=content?.filter(section=>"musicCarouselShelfRenderer" in section)
-
-  const songs=extractMusicData(content?.find(section=>"musicShelfRenderer" in section)?.musicShelfRenderer);
+  const songs=extractMusicData(content?.find(section=>"musicShelfRenderer" in section)?.musicShelfRenderer); 
   const albums=extractAlbumData(carrouselContent
                                       ?.find(section=>
                                           section
@@ -85,6 +86,7 @@ function extractArtistData(data: YTMusicResponse):Artist{
                                              .title
                                              .runs[0].text=="Albums"
                                             )?.musicCarouselShelfRenderer)
+  
 
   const  relatedArtists=extractRelatedArtist(carrouselContent
                                      ?.find(section=>
@@ -95,6 +97,7 @@ function extractArtistData(data: YTMusicResponse):Artist{
                                           .title
                                           .runs[0].text=="Fans might also like"
                                      )?.musicCarouselShelfRenderer)
+  
 
   const singlesAndEps=extractSinglesAndEps(carrouselContent
                               ?.find(section=>
@@ -104,18 +107,18 @@ function extractArtistData(data: YTMusicResponse):Artist{
                                       ?.musicCarouselShelfBasicHeaderRenderer
                                       .title
                                       .runs[0].text.includes("Singles & EPs")
-                              )?.musicCarouselShelfRenderer)                                         
-
+                              )?.musicCarouselShelfRenderer)
+                                       
 
   return{
-    songs:songs,
+    songs: songs,
     albums:albums,
     relatedArtists:relatedArtists,
     singlesAndEps:singlesAndEps,
     browseId:header?.subscriptionButton.subscribeButtonRenderer.channelId || "",
     name:header?.title.runs[0].text || "",
     thumbnail:header?.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails[0].url || "",
-    description:header?.description.runs.map(elem=>elem.text).join(""),
+    description:header?.description?.runs.map(elem=>elem.text).join(""),
     subscribers:header?.subscriptionButton.subscribeButtonRenderer.subscriberCountText.runs[0].text
   }
 }
@@ -148,7 +151,7 @@ export default function useArtistPage({ browseId }: { browseId: string  }) {
                 localized:false,
             })
         });
-        const data= await response.json();
+        const data= await response.json(); 
         const formatData= extractArtistData(data);
         setArtist(formatData);
       } catch (error) {

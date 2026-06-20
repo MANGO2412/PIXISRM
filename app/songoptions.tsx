@@ -1,23 +1,11 @@
 import {
   View,
   StyleSheet,
-  Modal,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   Pressable
 } from "react-native"
 import {Text} from "@/components/ui"
-
-import {
- Checkbox,
- CheckboxIndicator,
- CheckboxIcon,
- CheckboxLabel,
- CheckboxGroup
-} from "@/components/ui/checkbox"
-import { CheckIcon } from '@/components/ui/icon';
-
+import ModalPlaylist from "@/components/custome/ModalPlaylist"
 
 import SongItem from "@/components/custome/SongItem"
 import {
@@ -64,20 +52,19 @@ const OptionEleement:FC<{icon:ReactElement,label:string,onclick?:()=>void}>=({ic
 
 
 export default function songoptions(){
+  let navigation=useRouter();
   const [modalVisible,setModalVisible]=useState<boolean>(false)
   const {selectSong}=useContext(SongContext)
   const {dispatch}=useContext(GlobalContext)
   const {player,setSelectSongPlaying}=usePlayerContext()
-  const {playlists,addSongtoPlaylist}=usePlaylists()
+  const {addSongtoPlaylist}=usePlaylists()
   const {content}=usePlaylistContent({videoid:selectSong?.videoId})
-
-  let navigation=useRouter();
   const [values, setValues] = useState<string[]>([]);
 
    async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
         try {
             const visitorData = await Storage.getItem('visitorData');
-            WEB_REMIX.visitorData = visitorData;
+            WEB_REMIX.visitorData = visitorData || "";
             const response=await fetch(`${URL_API_YOUTUBE}next`,{
                     method:"POST",
                     headers:{
@@ -190,58 +177,14 @@ export default function songoptions(){
           <OptionEleement onclick={()=>navigation.replace(`/albummodal?browseId=${selectSong?.album?.browseId}`)} icon={<MaterialIcons size={30} name="album" color="white"/>} label="Ver album"/>
           <OptionEleement onclick={()=>navigation.replace(`/artistmodal?browseId=${selectSong?.artist.browseId}`)}  icon={<FontAwesome name="user" size={30} color="white" />} label={`Mas de ${selectSong?.artist.name}`} />
       </View>
-
-      <Modal
-       visible={modalVisible}
-       transparent
-       animationType="fade"
-       onRequestClose={()=>setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text className="text-center font-bold  text-2xl mb-12 text-white" >Agregar cancion a una lista de reproduccion</Text>
-              <View>
-                <CheckboxGroup
-                  value={values}
-                  onChange={(keys)=>{
-                    setValues(keys)
-                  }}
-                >
-                  <ScrollView  style={{height:300}}>
-                    {playlists.map(item=>(
-                      <Checkbox isDisabled={Boolean(content.find(song=>song.playlistId==item.id.toString()))} isChecked={Boolean(content.find(song=>song.playlistId==item.id.toString()))} className="mb-9" size="lg" key={item.id} value={item.id.toString()}>
-                        <CheckboxIndicator>
-                           <CheckboxIcon  as={CheckIcon}/>
-                        </CheckboxIndicator>
-                        <CheckboxLabel>{item.nombre}</CheckboxLabel>
-                      </Checkbox>
-                    ))}
-
-                  </ScrollView>
-                </CheckboxGroup>
-
-              </View>
-              <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      setModalVisible(false);
-                      setValues([]);
-                      
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancelar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.createButton}
-                    onPress={handleSavePlaylist}
-                  >
-                    <Text style={styles.createButtonText}>Agregar</Text>
-                  </TouchableOpacity>
-              </View>
-            </View>
-        </View>
-      </Modal>
+      <ModalPlaylist
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        values={values}
+        setValues={setValues}
+        content={content}
+        handleSavePlaylist={handleSavePlaylist}
+      />
     </View>
    )
 }
@@ -264,53 +207,5 @@ const styles=StyleSheet.create({
       borderRadius:2,
       marginBottom:3,
       backgroundColor:"white"    
-    },
-     modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        justifyContent: "center",
-        alignItems: "center",
-     },
-    modalTitle: {
-       fontSize: 20,
-       fontWeight: "bold",
-       color: "#fff",
-       marginBottom: 20,
-     },
-     modalContent: {
-         width: "85%",
-         backgroundColor: "#282828",
-         borderRadius: 16,
-         padding: 24,
-     },
-     modalButtons: {
-       flexDirection: "row",
-       justifyContent: "space-between",
-     },
-     cancelButton: {
-       flex: 1,
-       padding: 14,
-       marginRight: 8,
-       borderRadius: 12,
-       backgroundColor: "#3E3E3E",
-       alignItems: "center",
-     },
-     cancelButtonText: {
-       color: "#fff",
-       fontSize: 16,
-       fontWeight: "600",
-     },
-     createButton: {
-       flex: 1,
-       padding: 14,
-       marginLeft: 8,
-       borderRadius: 12,
-       backgroundColor: "#FF6A1A",
-       alignItems: "center",
-     },
-     createButtonText: {
-       color: "#fff",
-       fontSize: 16,
-       fontWeight: "600",
-     },
+    }
 })

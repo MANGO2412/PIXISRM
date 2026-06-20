@@ -1,5 +1,5 @@
 import {reducer,initialState} from "@/context/reduceContext/reducer"
-import {createContext,useReducer} from "react"
+import {createContext,useReducer,useMemo} from "react"
 
 export const GlobalContext = createContext<{
     state: typeof initialState,
@@ -11,8 +11,9 @@ export const GlobalContext = createContext<{
 
 export const GlobalProvider = ({children}: {children: React.ReactNode}) => {
     const [state, dispatch] = useReducer(reducer, initialState);
+    const contextValue = useMemo(() => ({ state, dispatch }), [state]);
     return (
-        <GlobalContext.Provider value={{ state, dispatch }}>
+        <GlobalContext.Provider value={contextValue}>
             {children}
         </GlobalContext.Provider>
     );

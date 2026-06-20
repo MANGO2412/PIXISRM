@@ -12,8 +12,7 @@ import type {Album} from "@/interface/album"
 import type {Song} from "@/interface/song"
 
 import {GlobalContext} from "@/context/reduceContext";
-import {SongContext} from "@/context/song/song-context"
-
+import SongItem from "@/components/custome/SongItem"
 import {WEB_REMIX} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 import {NextResponse} from "@/interface/next"
@@ -33,9 +32,8 @@ const {width} = Dimensions.get("window")
 
 export default function ArtistModal({artist}: ArtistModalProps) {
     let navigation=useRouter()
-    const {updateSong}=useContext(SongContext)
     const {dispatch}=useContext(GlobalContext)
-    const {player}=usePlayerContext()
+    const {player,setSelectSongPlaying}=usePlayerContext()
 
     async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
            try {
@@ -71,10 +69,8 @@ export default function ArtistModal({artist}: ArtistModalProps) {
            }
     }
    
-    async function reloadPlaylist(videoId:string){
-          const nextPageData =await fetchNex({videoId})
-          const {playlistId,params}=getParams({nextResponse:nextPageData})
-          const nextPageRaw=await fetchNex({videoId,playlistId,params})
+    async function reloadPlaylist(videoId:string,playlistId?:string){
+          const nextPageRaw=await fetchNex({videoId,playlistId})
           const playlistData=getPlaylist({nextResponse:nextPageRaw}) 
           let playlist:PlayList[]=[]
 
@@ -115,28 +111,24 @@ export default function ArtistModal({artist}: ArtistModalProps) {
         dispatch({ type: "SET_PLAYLIST", payload: playlist });
     }
 
-
     const playSong=async(item: Song)=>{
       player?.replace(""); 
       dispatch({ type: "SET_PLAYLIST", payload: [] });
-      const url=getSourceFromFormats((await fetchStreamData(item.videoId || ""))?.streamingData?.adaptiveFormats) || ""
-      updateSong({...item,url})  
+      const url=getSourceFromFormats((await fetchStreamData(item.videoId || ""))?.streamingData?.adaptiveFormats) || "";
+      
+      setSelectSongPlaying({...item,url})
       navigation.navigate("/playedsong");
-      reloadPlaylist(item.videoId)
+      reloadPlaylist(item.videoId, item.playlistId)
     }
 
     const renderSongItem = ({item, index}: {item: Song, index: number}) => (
-        <Pressable onPress={()=>playSong(item)} style={styles.songItem}>
-            <Text size="lg" className="color-gray-400 w-8">{index + 1}</Text>
-            <Image source={{uri: item.thumbnail}} style={styles.songThumbnail}/>
-            <View style={styles.songInfo}>
-                <Text size="md" className="color-white font-bold" numberOfLines={1}>{item.title}</Text>
-                <Text size="sm" className="color-gray-400">{item.artist.name}</Text>
-            </View>
-            <Text size="sm" className="color-gray-400">{item.duration}</Text>
-        </Pressable>
+        <SongItem  
+         key={index} 
+         customPlay={()=>playSong(item)} 
+         style={styles.songItem}  {...item} 
+         options />
     )
-
+    
     const renderAlbumItem = ({item}: {item: Album}) => (
         <Pressable style={styles.albumItem} onPress={()=> navigation.navigate(`/albummodal?browseId=${item.browseId}&params=${item.params}`)}>
             <Image source={{uri: item.thumbnail}} style={styles.albumThumbnail}/>
@@ -179,7 +171,7 @@ export default function ArtistModal({artist}: ArtistModalProps) {
                             )}
                         </View>
                   </View>
-                    {artist.songs && (
+                    {artist.songs && artist.songs.length > 0 && (
                         <View style={styles.section}>
                           <Text size="lg" className="color-white font-bold mb-4">Canciones</Text>
                            <FlatList
@@ -191,7 +183,7 @@ export default function ArtistModal({artist}: ArtistModalProps) {
                         </View>
                     )}
 
-                    { artist.albums && (
+                    {artist.albums && artist.albums.length > 0 && (
                       <View style={styles.section}>
                           <Text size="lg" className="color-white font-bold mb-4">Álbumes</Text>
                           <FlatList
@@ -205,7 +197,7 @@ export default function ArtistModal({artist}: ArtistModalProps) {
                         </View>
                     )}
 
-                    { artist.singlesAndEps && (
+                    { artist.singlesAndEps && artist.singlesAndEps.length > 0 && (
                         <View style={styles.section}>
                           <Text size="lg" className="color-white font-bold mb-4">Sencillos</Text>
                            <FlatList
@@ -254,7 +246,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#121212",
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        height: "94%",
+        height: "90%",
         paddingBottom: 20,
     },
     headerContainer: {
@@ -311,6 +303,7 @@ const styles = StyleSheet.create({
     },
     section: {
         marginTop: 24,
+        marginBottom:30,
     },
     relatedList: {
         paddingRight: 16,

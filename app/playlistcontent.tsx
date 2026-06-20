@@ -2,8 +2,6 @@ import {
   View,
   StyleSheet,
   ActivityIndicator,
-  Pressable,
-  Image,
   FlatList
 } from "react-native"
 
@@ -20,7 +18,6 @@ import {
 
 import { 
   Heart, 
-  Plus, 
   Music 
 } from "lucide-react-native";
 
@@ -65,7 +62,7 @@ const PlaylistContent = (): React.ReactElement => {
   const { playlist_id,nombre } = useLocalSearchParams<{ playlist_id: string;nombre:string}>();
   const [namePlaylist,setNamePlaylist]=useState<string>(nombre)
   const {content,loading,deleteSong}=usePlaylistContent({playlist_id})
-  const {player,selectSongPlaying,setSelectSongPlaying}=usePlayerContext()
+  const {selectSongPlaying}=usePlayerContext()
   let navigation=useRouter()
 
   const onChangeValue=(newName:string)=>{
@@ -76,6 +73,7 @@ const PlaylistContent = (): React.ReactElement => {
   const ListItem = memo(({ item }: { item: Song }) => {
     const onRight= useSharedValue(true);
     const position = useSharedValue(0);
+    const {player,setSelectSongPlaying,selectSongPlaying}=usePlayerContext()
     const {dispatch}=useContext(GlobalContext)
     const isPlaying = selectSongPlaying?.videoId === item.videoId;
 

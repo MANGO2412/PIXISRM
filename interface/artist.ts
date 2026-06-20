@@ -46,7 +46,9 @@ export interface Artist{
         thumbnail:string,
         videoId:string,
         title:string,
-        artist:{name:string}
+        artist:{
+            name:string
+        }[]
     }[],
     albums?:{
         thumbnail:string,

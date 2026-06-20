@@ -84,6 +84,7 @@ export default function AlbumModal() {
 
     const playSong=(item: Song)=>{
         player?.replace("");
+        setSelectSongPlaying(item);
         dispatch({ type: "SET_PLAYLIST", payload: [] }); 
         navigation.navigate("/playedsong");
         reloadplaylist(item)

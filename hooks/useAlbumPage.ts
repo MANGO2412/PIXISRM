@@ -39,9 +39,7 @@ async function extractMUsic(playlistId:string):Promise<Song[]>{
    if(!data){
      return []
    }
- 
-
-
+   
    const contents=data.contents.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer.contents.find(item=>"musicPlaylistShelfRenderer"in item)
    return contents?.musicPlaylistShelfRenderer.contents.map(item=>{
         const flexColumns=item.musicResponsiveListItemRenderer.flexColumns; 
@@ -70,23 +68,26 @@ async function extractAlbumInfo(content:YTContents){
     let  tabsHeader =content.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents[0];
     const  musicResponsiveHeaderRenderer="musicResponsiveHeaderRenderer" in tabsHeader?tabsHeader.musicResponsiveHeaderRenderer : undefined
     const artist:Omit<Artist,"thumbnail">={
-        browseId:musicResponsiveHeaderRenderer?.straplineTextOne.runs[0].navigationEndpoint?.browseEndpoint?.browseId||"Unknow Name",
-        name:musicResponsiveHeaderRenderer?.straplineTextOne.runs[0].text || "Unknow browseId",
+        browseId:musicResponsiveHeaderRenderer?.straplineTextOne.runs?.[0].navigationEndpoint?.browseEndpoint?.browseId||"Unknow Name",
+        name:musicResponsiveHeaderRenderer?.straplineTextOne.runs?.[0].text || "Unknow browseId",
     }
+ 
 
     const thumbnail=musicResponsiveHeaderRenderer?.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails[0].url
     // const data=content.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer.contents.find(item=> "musicShelfRenderer" in item)
 
     
 
-    const playlistid=musicResponsiveHeaderRenderer?.buttons.find(item=>"musicPlayButtonRenderer"in item)
+    const navigationPlaylist=musicResponsiveHeaderRenderer?.buttons.find(item=>"musicPlayButtonRenderer"in item)
+    const playlistid=navigationPlaylist?.musicPlayButtonRenderer?.playNavigationEndpoint.watchPlaylistEndpoint?.playlistId || navigationPlaylist?.musicPlayButtonRenderer?.playNavigationEndpoint.watchEndpoint?.playlistId
+
     return {
-        title:musicResponsiveHeaderRenderer?.title.runs[0].text,
+        title:musicResponsiveHeaderRenderer?.title.runs?.[0].text,
         description:musicResponsiveHeaderRenderer?.description?.musicDescriptionShelfRenderer.description.runs.map(item=>item.text).join(""),
         thumbnail,
         year:musicResponsiveHeaderRenderer?.subtitle.runs.join(""),
         artist,
-        songs:await extractMUsic(playlistid?.musicPlayButtonRenderer?.playNavigationEndpoint.watchPlaylistEndpoint?.playlistId || ""),
+        songs:await extractMUsic(playlistid || ""),
         duration:musicResponsiveHeaderRenderer?.secondSubtitle.runs.map(item=>item.text).join("")
     } as Album;
 

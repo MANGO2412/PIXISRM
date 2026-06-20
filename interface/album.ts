@@ -105,6 +105,7 @@ export interface YTMusicPlayButtonRenderer {
     playNavigationEndpoint: {
         clickTrackingParams?: string;
         watchPlaylistEndpoint?: { playlistId: string,videoId:string };
+        watchEndpoint?: { playlistId: string,videoId:string };
     };
     trackingParams: string;
     playIcon: { iconType: string };

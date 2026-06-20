@@ -31,8 +31,8 @@ import {usePlayerContext} from "@/context/player/player-context"
 const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDetail?:boolean,customPlay?:() => Promise<void>}>=({thumbnail,videoId,artist,album,title,style,options,showDetail,customPlay})=>{
     let navigation=useRouter()
     const {updateSong}=useContext(SongContext)
-    const {dispatch}=useContext(GlobalContext)
-    const {player,setSelectSongPlaying}=usePlayerContext()
+    const {dispatch,state}=useContext(GlobalContext)
+    const {setSelectSongPlaying,player}=usePlayerContext()
 
     async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
         try {
@@ -73,7 +73,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
           const {playlistId,params}=getParams({nextResponse:nextPageData})
           const nextPageRaw=await fetchNex({videoId,playlistId,params})
           const playlistData=getPlaylist({nextResponse:nextPageRaw}) 
-          let playlist:PlayList[]=[]
+     
           
           const CONCURRENT_LIMIT = 3
           let currentIndex = 0
@@ -83,65 +83,49 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
               if(!playlistData) return;
 
               while(currentIndex < playlistData?.length ){
-                    const index = currentIndex++
-                    const elem = playlistData[index]
-                    if (!elem?.song?.videoId) continue
-                    const responseUrl =await fetchStreamData(
+                  let playlist:PlayList[]=state.playlist || []
+
+                  const index = currentIndex++
+                  const elem = playlistData[index]
+                  if (!elem?.song?.videoId) continue  
+                  const responseUrl =await fetchStreamData(
                           elem.song.videoId
-                    )
-
-
-                  playlist[index] = {
+                  )
+                  const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+                  dispatch({ type: "PUSH_PLAYLIST", payload: {
                     ...elem,
                     song: {
                         ...elem.song,
-                        url:
-                            getSourceFromFormats(
-                                responseUrl?.streamingData?.adaptiveFormats
-                            ) || ""
+                        url:url
+                          
                     }
-                  }
+                  }});
+
               }
           }
-
           
-          await Promise.all(
+        await Promise.all(
             Array.from(
               {length:CONCURRENT_LIMIT},
               ()=>worker()
             )
-          )
-          // await Promise.all(
-          //   getPlaylist({nextResponse:nextPageRaw})?.map(async (elem)=>{ 
-          //   console.log(elem?.song.videoId)
-          //    await delay(500)
-          //   const responseUrl=await fetchStreamData(elem?.song.videoId || "") 
-          //   return {
-          //     ...elem,
-          //     song:{
-          //       ...elem?.song,
-          //       url:getSourceFromFormats(responseUrl?.streamingData.adaptiveFormats) || ""
-          //     }
-          //   }
-           
-          // })||[]);
-          // console.log(playlist)
-          dispatch({ type: "SET_PLAYLIST", payload: playlist.filter(Boolean) });
+        )
+
+      
+       
     }
 
     const playSong=async()=>{
-       
-        if(showDetail){
-          navigation.navigate("/playedsong")
-        }else{
+        navigation.navigate("/playedsong");
+        if(!showDetail){
           player?.replace(""); 
           dispatch({ type: "SET_PLAYLIST", payload: [] });
+
           const url=getSourceFromFormats((await fetchStreamData(videoId || ""))?.streamingData?.adaptiveFormats) || ""
-          console.log("select url",url)
-          setSelectSongPlaying({thumbnail,videoId,artist,title,url})  
-          navigation.navigate("/playedsong");
+          console.log("url from songitem",url)
+          setSelectSongPlaying({thumbnail,videoId,artist,album,title,url,index:0})  
           reloadPlaylist()
-        }      
+        }           
     }
 
 
@@ -151,7 +135,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
           <Image style={styles.image}  source={{uri:thumbnail}}/>
           <View style={styles.info} >
               <Text   size="lg" className="color-typography-950" > {title.length>20?title.substring(0,20)+"...":title}</Text>
-              <Text size="sm">{artist.name}</Text>
+              <Text size="sm">{artist.length>0?artist.map(elem=>elem.name).join(" & "):"Artista desconocido"}</Text>
           </View>
         </Pressable>
         {options && (

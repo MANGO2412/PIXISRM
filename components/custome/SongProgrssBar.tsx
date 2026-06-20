@@ -2,22 +2,29 @@ import {useEffect,useState,useRef} from "react"
 import {View,StyleSheet} from "react-native"
 import Slider from "@react-native-community/slider"
 import {Text} from "@/components/ui"
-import {usePlayerContext} from "@/context/player/player-context"
+import {usePlayerContext,usePlayerStatus} from "@/context/player/player-context"
 
 
 const SongProgressBar=()=>{
-    const {player,status,isLoadingPlayer}=usePlayerContext()
-    const [progress, setProgress] = useState(0)
+    const {player}=usePlayerContext()
+    const {status}=usePlayerStatus()
+    const progressRef = useRef(0);
     let isSlidingRef=useRef(false)
 
     useEffect(() => {
         if (status?.isLoaded  && status.duration > 0 && !isSlidingRef.current) {
             const value = (status.currentTime / status.duration) * 100
-            setProgress(value)
-        }else{
-            setProgress(0)
-        } 
+            progressRef.current=value
+        }
+
+       
     },[status?.currentTime, status?.duration, status?.isLoaded])
+
+    useEffect(() => {
+        if (!status?.isLoaded || !status?.duration) {
+           progressRef.current=0
+        }
+    }, [status?.isLoaded, status?.duration]);
 
   
     const formatTime = (seconds: number) => {
@@ -33,7 +40,7 @@ const SongProgressBar=()=>{
                     style={{ width: "100%", height: 30 }}
                     minimumValue={0}
                     maximumValue={100}
-                    value={progress}
+                    value={progressRef.current}
                     minimumTrackTintColor="#FF6A1A"
                     maximumTrackTintColor="#FFFFFF"
                     thumbTintColor="#FF6A1A"
@@ -48,7 +55,7 @@ const SongProgressBar=()=>{
                       player?.seekTo(newTime)
                       player?.play()
                     }}
-                    onValueChange={(value) => setProgress(value)}
+                    onValueChange={(value) => progressRef.current=value}
                   />
                 </View>
                 <View style={styles.timeContainer}>
@@ -65,7 +72,7 @@ const SongProgressBar=()=>{
 
 const styles = StyleSheet.create({
     progressSection: {
-        marginTop: 30,
+        marginTop: 20,
         width: "100%",
     },
     timeContainer: {

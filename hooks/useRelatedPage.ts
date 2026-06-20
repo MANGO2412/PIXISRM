@@ -22,19 +22,22 @@ function formattedtoSong (item?:MusicResponsiveListItemRenderer | undefined):Son
         const title=item.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||""
         const thumbnailUrl=item.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails[0].url||""
        
-        const artistName=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||""
-        const browseId=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint?.browseEndpoint?.browseId||""
+        // const artistName=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||""
+        // const browseId=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint?.browseEndpoint?.browseId||""
 
+        const artistinfo=item.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs;
         const album=item.flexColumns.find(item=>item.musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint.browseEndpoint?.browseEndpointContextSupportedConfigs.browseEndpointContextMusicConfig.pageType=="MUSIC_PAGE_TYPE_ALBUM")
 
      
         return {
             videoId:videoId,
             title:title,
-            artist:{
-                name:artistName,
-                browseId:browseId
-            },
+            artist:artistinfo.map(elem=>{
+                return {
+                    name:elem.text,
+                    browseId:elem.navigationEndpoint?.browseEndpoint?.browseId || ""
+                }
+            }),
             album:{
               title:album?.musicResponsiveListItemFlexColumnRenderer.text.runs[0].text || "Uknown Album",
               browseId:album?.musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint.browseEndpoint?.browseId || ""
@@ -174,6 +177,8 @@ export default function useRelatedPage({videoid}:{videoid:string}){
 
                 const data:browserResponse=await response.json()
                 const contents=data.contents.sectionListRenderer.contents
+                
+                console.log(contents)
 
                 const relatedSongsData:(Song | null)[] | undefined=contents.
                                         find(content=>
@@ -186,6 +191,8 @@ export default function useRelatedPage({videoid}:{videoid:string}){
                                                        text=="You might also like")?.
                                                        musicCarouselShelfRenderer.
                                                        contents.map(content=>formattedtoSong(content.musicResponsiveListItemRenderer))
+                
+                console.log("informacion de las canciones",relatedSongs)
 
                 const relatedAlbumsData:(Album | null)[]|undefined=contents.
                                                  find(content=>content.

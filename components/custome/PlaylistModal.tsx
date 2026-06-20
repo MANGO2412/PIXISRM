@@ -23,15 +23,7 @@ export default function PlaylistModal({playlist, currentVideoId}: PlaylistModalP
             index:item.index
         })
 
-        player?.replace(item.song.url|| "")    
-        player?.play()
-        player?.updateLockScreenMetadata({
-               title: item.song.title || "Unknown Title",
-               artist:item.song?.artist.name || "Unknown Artist",
-               artworkUrl:
-                item.song.thumbnail?.replace("w60-h60", "w400-h400") ||
-                "https://via.placeholder.com/150",      
-        })        
+         player?.replace(item.song.url|| "")            
     }
 
     const renderItem = ({item}: {item: PlayList}) => {
@@ -59,7 +51,7 @@ export default function PlaylistModal({playlist, currentVideoId}: PlaylistModalP
                         {item.song.title}
                     </Text>
                     <Text size="sm" className="color-gray-400" numberOfLines={1}>
-                        {item.song.artist.name}
+                        {item.song.artist.map(elem=>elem.name).join(" & ")}
                     </Text>
                 </View>
                 

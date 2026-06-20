@@ -3,11 +3,27 @@ export interface Thumbnail {
     width: number;
     height: number;
 }
-
-export interface WatchEndpointMusicConfig {
-    musicVideoType: string;
+export interface ContinuationItem {
+    nextContinuationData?: {
+        continuation: string;
+        clickTrackingParams: string;
+    };
 }
 
+export interface MusicShelfContinuation {
+    contents: {
+        musicResponsiveListItemRenderer?: MusicResponsiveListItemRenderer;
+    }[];
+    continuations?: ContinuationItem[];
+}
+
+export interface ContinuationContents {
+    musicShelfContinuation?: MusicShelfContinuation;
+}
+
+export interface ContinuationResponse {
+    continuationContents: ContinuationContents;
+}
 export interface WatchEndpointMusicSupportedConfigs {
     watchEndpointMusicConfig: WatchEndpointMusicConfig;
 }
@@ -74,18 +90,14 @@ export interface MusicResponsiveListItemRenderer {
     flexColumns: {
         musicResponsiveListItemFlexColumnRenderer: MusicResponsiveListItemFlexColumnRenderer;
     }[];
+    navigationEndpoint?: NavigationEndpoint;
 }
 
 export interface MusicShelfRenderer {
     contents: {
         musicResponsiveListItemRenderer?: MusicResponsiveListItemRenderer;
     }[];
-    continuations?: {
-        nextContinuationData?: {
-            continuation: string;
-            clickTrackingParams: string;
-        };
-    }[];
+    continuations?: ContinuationItem[];
 }
 
 export interface SectionListRenderer {

@@ -1,10 +1,19 @@
-import {View, Image, StyleSheet, Pressable,ImageBackground} from "react-native"
-import { useContext, useState} from "react"
+import {View, Image, StyleSheet, Pressable,ImageBackground,Alert} from "react-native"
+import { useContext, useEffect, useState} from "react"
 import {Text, Icon} from "@/components/ui"
 
 import {
+  Host,
+  DropdownMenu,
+  DropdownMenuItem,
+  Text as ComposeText,
+  RNHostView,
+} from '@expo/ui/jetpack-compose';
+
+
+
+import {
     useRouter,
-    router
 } from "expo-router"
 
 import {
@@ -20,16 +29,112 @@ import {
 } from "lucide-react-native"
 
 import {GlobalContext} from "@/context/reduceContext";
-import {usePlayerContext} from "@/context/player/player-context"
+import {usePlayerContext,usePlayerStatus} from "@/context/player/player-context"
 import SongProgressBar from "@/components/custome/SongProgrssBar"
+
+import {usePlaylists} from "@/hooks/usePlaylists"
+import {usePlaylistContent} from "@/hooks/usePlaylistContent"
+import { SongContext } from "@/context/song/song-context"
+
+
+import SlidedText from "@/components/custome/SlideText";
+import ModalPlaylist from "@/components/custome/ModalPlaylist"
+
+import  type {Song} from "@/interface/song"
+
+
+function PopoverOptions({song}: {song: Song}) {
+  let navigation=useRouter()
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [modalVisible,setModalVisible]=useState<boolean>(false)
+  const {addSongtoPlaylist}=usePlaylists()
+  const [values, setValues] = useState<string[]>([]);
+  const {content}=usePlaylistContent({videoid:song?.videoId})
+
+
+  const handleSavePlaylist=async ()=>{
+    if(values.length <= 0){
+      Alert.alert("Selecciona al menos una lista de reproduccion")
+      return;
+    }
+  
+    const success=await addSongtoPlaylist(song,values)
+    setModalVisible(false);
+
+    if(success){
+      Alert.alert("La cancion se agrego exitosamente a la listas de reproducciones")
+    }else{
+      Alert.alert("Ocurrio un error al agregar cancion a lista de reproducciones")
+    }
+  }
+
+  const handleOpenModal=()=>{
+    setIsExpanded(false)
+    setModalVisible(true)
+  }
+
+  return (
+    <>
+      <Host matchContents>
+      <DropdownMenu expanded={isExpanded} onDismissRequest={() => setIsExpanded(false)}>
+        <DropdownMenu.Trigger>
+          <RNHostView matchContents>
+            <Pressable
+              onPress={() => setIsExpanded(true)}
+              style={{paddingVertical: 5, zIndex:10}}
+              >
+                 <Icon as={MoreHorizontal} className="color-white" size="xl" />
+            </Pressable>
+          </RNHostView>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Items>
+          <DropdownMenuItem onClick={handleOpenModal}>
+            <DropdownMenuItem.Text>
+              <ComposeText>Agregar a lista de reproducción</ComposeText>
+            </DropdownMenuItem.Text>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={()=>navigation.replace(`/albummodal?browseId=${song?.album?.browseId}`)}>
+            <DropdownMenuItem.Text>
+              <ComposeText>Ver Álbum</ComposeText>
+            </DropdownMenuItem.Text>
+          </DropdownMenuItem>
+          {(song?.artist?.length ?? 0) >0 && (
+            <DropdownMenuItem onClick={()=>navigation.replace(`/artistmodal?browseId=${song?.artist[0]?.browseId}`)}>
+            <DropdownMenuItem.Text>
+              <ComposeText>Ver Artista</ComposeText>
+            </DropdownMenuItem.Text>
+          </DropdownMenuItem>
+          )}
+        </DropdownMenu.Items>
+      </DropdownMenu>
+    </Host>
+    <ModalPlaylist
+     modalVisible={modalVisible}
+     setModalVisible={setModalVisible}
+     values={values}
+     setValues={setValues}
+     content={content}
+     handleSavePlaylist={handleSavePlaylist}
+    />
+
+    </>
+  );  
+}
 
 export default function PlayedSong() {
     let navigation=useRouter()
+    const {updateSong}=useContext(SongContext)
     const {state}=useContext(GlobalContext)
+    const {addSongtoPlaylist}=usePlaylists()
+    const {content,deleteSong}=usePlaylistContent({playlist_id:"1"})
+    const {player,setSelectSongPlaying,selectSongPlaying}=usePlayerContext()
+    const {status}=usePlayerStatus()
     const [isLiked, setIsLiked] = useState(false)
+    const [repeat, setRepeat] = useState(player?.loop || false)
 
-    const {player,status,setSelectSongPlaying,selectSongPlaying}=usePlayerContext()
-   
+    useEffect(()=>{
+       setIsLiked(content.find(item=>item.videoId==selectSongPlaying?.videoId) != undefined)
+    },[content,selectSongPlaying])
        
     const playAudio =  () => {
         if (status?.playing) {
@@ -44,8 +149,7 @@ export default function PlayedSong() {
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             if((currentSong?.index|| 0)+1<=state.playlist.length){
                 player?.replace("")
-                const nextSong=state.playlist[(currentSong?.index|| 0)+1]
-                console.log("next song",nextSong)
+                const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
                 setSelectSongPlaying({
                   url:nextSong.song.url,
                   thumbnail: nextSong.song.thumbnail,
@@ -65,7 +169,7 @@ export default function PlayedSong() {
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             if((currentSong?.index|| 0)-1>=0){
                  player?.replace("")
-                const nextSong=state.playlist[(currentSong?.index|| 0)-1]
+                const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)-1]
                 setSelectSongPlaying({
                   url:nextSong.song.url,    
                   thumbnail: nextSong.song.thumbnail,
@@ -80,12 +184,36 @@ export default function PlayedSong() {
         }
     }
 
+    const onLiked=()=>{
+      if(isLiked){
+         deleteSong(selectSongPlaying?.videoId || "",1)
+         setIsLiked(false)
+      }else{
+        if(!selectSongPlaying) return;
+
+        addSongtoPlaylist(selectSongPlaying,["1"]);
+        setIsLiked(true);
+      }
+    }
+
+    const onRepeat=()=>{
+        if(player){
+            player.loop = !repeat
+        }
+        setRepeat(!repeat)
+    }
+
+    const openSongOptions=()=>{
+       if(selectSongPlaying){
+          navigation.navigate("/songoptions");
+          updateSong(selectSongPlaying)
+       }
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Pressable onPress={() => {}}>
-                    <Icon as={MoreHorizontal} className="color-white" size="xl" />
-                </Pressable>
+                <PopoverOptions song={selectSongPlaying as Song}/>
             </View>
             <ImageBackground
                 source={{uri: selectSongPlaying?.thumbnail.replace("w60-h60", "w300-h300") || "https://via.placeholder.com/300"}}
@@ -103,22 +231,46 @@ export default function PlayedSong() {
                 </View>
 
                 <View style={styles.songInfo}>
-                    <Text size="2xl" className="text-center color-white font-bold" numberOfLines={2}>
-                        {selectSongPlaying?.title || "Song Title"}
-                    </Text>
-                    <Pressable onPress={()=>navigation.replace(`/artistmodal?browseId=${selectSongPlaying?.artist.browseId}`)}>
-                       <Text size="lg" className="color-gray-400 text-center ">
-                           {selectSongPlaying?.artist.name || "Artist Name"}
-                       </Text>
-                    </Pressable>
+                    {(selectSongPlaying?.title || "Song Unknown").trim().length>=35?(
+                      <SlidedText value={selectSongPlaying?.title || "Song Unknown"} />
+                    ):(
+                       <Text size="2xl" className="text-center color-white font-bold" numberOfLines={2}>
+                          {selectSongPlaying?.title || "Song Unknown"}
+                       </Text> 
+                    )}
+
+                   {(selectSongPlaying?.artist?.length ?? 0) > 0 ?
+                   (
+                    <View
+                     style={{display:"flex",flexDirection:"row",justifyContent:"center"}}
+                    >
+                      {
+                        selectSongPlaying?.artist?.map((elem,index)=>{
+                            return(
+                             <Pressable key={index} onPress={()=>navigation.replace(`/artistmodal?browseId=${elem.browseId}`)}>
+                                <Text size="lg" className="color-gray-400 text-center ">
+                                     {elem.name || "Artista desconocido"}
+                                </Text>
+                             </Pressable>
+                            )
+                        })
+                      }
+
+                    </View>
+                   ):
+                   (
+                     <Text size="lg" className="color-gray-400 text-center ">Artista desconocido</Text>
+                   )
+                   }
                 </View>
             </View>
 
-             <SongProgressBar/>
+            <SongProgressBar/>
 
             <View style={styles.controls}>
-                <Pressable onPress={() => {}} style={styles.secondaryControl}>
+                <Pressable onPress={onLiked} style={styles.secondaryControl}>
                     <Icon
+                        stroke=""
                         as={Heart}
                         className={isLiked ? "color-red-500" : "color-white"}
                         size="lg"
@@ -147,20 +299,20 @@ export default function PlayedSong() {
                     </Pressable>
                 </View>
 
-                <Pressable onPress={() => {}} style={styles.secondaryControl}>
-                    <Icon as={Repeat} className="color-white" size="lg" />
+                <Pressable onPress={onRepeat} style={styles.secondaryControl}>
+                    <Icon as={Repeat} className={repeat ? "color-background-500" : "color-white"} size="lg" />
                 </Pressable>
             </View>
 
             <View style={styles.bottomSection}>
-                <Pressable style={styles.bottomOption} onPress={() =>{router.setParams({ showDetailSong: undefined }) ;router.push({pathname: "/playlistmodal", params: {videoId:selectSongPlaying?.videoId}})}}>
+                <Pressable style={styles.bottomOption} onPress={() => navigation.navigate(`/playlistmodal?videoId=${selectSongPlaying?.videoId}`)}>
                     <Icon as={ListMusic} className="color-white" size="xl" />
                     <Text size="xl" className="color-white mt-1">
                         Lista
                     </Text>
                 </Pressable>
 
-                <Pressable style={styles.bottomOption} onPress={()=>router.push("/lyrics")}>
+                <Pressable style={styles.bottomOption} onPress={()=>navigation.navigate("/lyrics")}>
                     <Icon as={Mic2} className="color-white" size="xl" />
                     <Text size="xl" className="color-white mt-1">
                         Letra
@@ -182,6 +334,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-end",
         paddingTop: 50,
         paddingBottom: 20,
+        zIndex: 10,
     },
     content: {
         alignItems: "center",
@@ -208,7 +361,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginTop: 30,
+        marginTop: 15,
     },
     secondaryControl: {
         padding: 10,
@@ -233,10 +386,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         gap: 80,
-        marginTop: 90,
+        marginTop: 30,
         paddingBottom: 40,
     },
     bottomOption: {
+        padding: 10,
         alignItems: "center",
     },
 })

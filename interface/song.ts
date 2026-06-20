@@ -4,7 +4,7 @@ import type {Artist} from "@/interface/artist"
 export interface Song{
     thumbnail:string;
     videoId:string;
-    artist:Omit<Artist,"thumbnail">;
+    artist:Omit<Artist,"thumbnail">[];
     title:string;
     duration?:string;
     playlistId?:string;
@@ -12,4 +12,5 @@ export interface Song{
     index?:number,
     isThisSongWithPlaylist?:boolean,
     url?:string
+    repeat?:boolean
 }

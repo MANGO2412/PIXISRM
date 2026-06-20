@@ -3,7 +3,8 @@ import {PlayList} from "@/interface/playlist"
 enum ReducerActionType {
   SET_RESULTS = "SET_RESULTS",
   SET_QUERY = "SET_QUERY",
-  SET_PLAYLIST="SET_PLAYLIST"
+  SET_PLAYLIST="SET_PLAYLIST",
+  PUSH_PLAYLIST="PUSH_PLAYLIST"
 }
 interface ReducerAction {
   type: ReducerActionType;
@@ -25,6 +26,8 @@ export const reducer= (state: ReducerState, action: ReducerAction): ReducerState
         return { ...state, query: action.payload };
     case ReducerActionType.SET_PLAYLIST:
         return {...state,playlist:action.payload}
+    case ReducerActionType.PUSH_PLAYLIST:
+      return { ...state, playlist: [...(state.playlist || []), action.payload] };
     default:
       return state;
   }

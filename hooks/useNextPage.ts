@@ -12,7 +12,7 @@ export default function useNextPage({params,videoId,playlistId}:{params?:string,
         async function fetchNex() {
             try {
                 const visitorData = await Storage.getItem('visitorData');
-                WEB_REMIX.visitorData = visitorData;
+                WEB_REMIX.visitorData = visitorData || "";
                 const response=await fetch(`${URL_API_YOUTUBE}next`,{
                         method:"POST",
                         headers:{

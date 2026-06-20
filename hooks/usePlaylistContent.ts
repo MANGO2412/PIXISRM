@@ -31,7 +31,7 @@ export function usePlaylistContent({playlist_id,videoid}:{playlist_id?:string,vi
 
   const fetchContentPlaylist = useCallback(async () => {
     try {
-      const  result =playlist_id ?  await db.getAllAsync<SongPlaylist>("SELECT * FROM songs where playlist_id=?",playlist_id)
+      const result=playlist_id ? await db.getAllAsync<SongPlaylist>("SELECT * FROM songs where playlist_id=?",playlist_id)
                                  :videoid? await db.getAllAsync<SongPlaylist>("SELECT * FROM songs where videoId=?",videoid)
                                          :[];
 

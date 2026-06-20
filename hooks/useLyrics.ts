@@ -21,7 +21,7 @@ const useLyrics=({ videoId }: { videoId: string  })=>{
         setIsLoading(true)
         try {
             const visitorData = await Storage.getItem('visitorData');
-            WEB_REMIX.visitorData = visitorData;
+            WEB_REMIX.visitorData = visitorData || "";
             //next  response
             const responseNext = await fetch(`${URL_API_YOUTUBE}next`,{
                  method:"POST",

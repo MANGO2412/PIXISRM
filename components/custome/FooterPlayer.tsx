@@ -1,5 +1,5 @@
 import {View,StyleSheet,Pressable} from "react-native"
-import {useEffect, useState,useContext} from "react"
+import {useEffect, useState,useContext,useRef} from "react"
 import { Progress, ProgressFilledTrack } from '@/components/ui/progress';
 import {Icon} from "@/components/ui/"
 import {
@@ -8,47 +8,54 @@ import {
   X
 } from "lucide-react-native"
 import SongItem from "@/components/custome/SongItem"
-import {usePlayerContext} from "@/context/player/player-context"
+import {usePlayerContext,usePlayerStatus} from "@/context/player/player-context"
 import {GlobalContext} from "@/context/reduceContext/"
+
+
 
 const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
  const [updateLockScreen,setUpdateLockScreen]=useState<boolean>(false);
- const {player,selectSongPlaying,setSelectSongPlaying,status}=usePlayerContext()
+ const {player,selectSongPlaying,setSelectSongPlaying}=usePlayerContext()
+ const {status}=usePlayerStatus()
  const {state}=useContext(GlobalContext)
- const [progress,setProgress]=useState(0)
+ const playlistRef = useRef(state.playlist);
+ const progressRef = useRef(0);
+
   
     useEffect(() => {
      if (status?.isLoaded  && status.duration > 0) {
         const value = (status.currentTime / status.duration) * 100
-        setProgress(value)
-    } 
-    
-    return()=>{
-        setProgress(0);
+        progressRef.current=value
     }
+    
+     return () => {
+            progressRef.current=0;
+     };
    },[status?.currentTime, status?.duration, status?.isLoaded])
 
-
    useEffect(()=>{
-       if (!status?.didJustFinish) return;
-   
-       console.log('Audio has finished playing! in footerplayer');
-       nextPlaylist()
-       
-    },[status?.didJustFinish])
-
-  
+    playlistRef.current = state.playlist;
+   },[state.playlist]);
 
     useEffect(()=>{
         if (!player || !selectSongPlaying || player.isLoaded) return  
+    
         console.log("url from  the footerplayer",selectSongPlaying.url)   
+      
         player.replace(selectSongPlaying?.url || "")
         player.play();
 
+        let subscription=player.addListener("playbackStatusUpdate",(status)=>{
+            if(status.didJustFinish){
+                console.log('Audio has finished playing! in footerplayer');
+                nextPlaylist()
+            }
+        });
+  
         if(updateLockScreen){
             player.updateLockScreenMetadata({
                title: selectSongPlaying.title || "Unknown Title",
-               artist:selectSongPlaying?.artist.name || "Unknown Artist",
+               artist:selectSongPlaying?.artist.map(elem=>elem.name).join(" & ") || "Unknown Artist",
                artworkUrl:
                 selectSongPlaying.thumbnail?.replace("w60-h60", "w400-h400") || "https://via.placeholder.com/150",      
             });
@@ -56,23 +63,26 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
         }else{
           player.setActiveForLockScreen(true, {
            title: selectSongPlaying.title || "Unknown Title",
-           artist:selectSongPlaying?.artist.name || "Unknown Artist",
+           artist:selectSongPlaying?.artist.map(elem=>elem.name).join(" & "),
            artworkUrl:
              selectSongPlaying.thumbnail?.replace("w60-h60", "w400-h400") ||
              "https://via.placeholder.com/150",
          })
         }
+
+        return () => subscription?.remove();
     },[selectSongPlaying])
 
     const nextPlaylist=()=>{
-        console.log(state.playlist)
-        if(state.playlist){
+        const playlist = playlistRef.current;
+        console.log(playlist)
+        if(playlist){
             console.log("snext is execute from footer in line 96")
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             
 
-            if((currentSong?.index|| 0)+1<state.playlist.length){
-                const nextSong=state.playlist[(currentSong?.index|| 0)+1]
+            if((currentSong?.index|| 0)+1<playlist.length){
+                const nextSong=playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
                 player?.replace("")
                 setUpdateLockScreen(true)
                 setSelectSongPlaying({
@@ -112,7 +122,7 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
                   </Pressable>
                </View>
              </View>
-              <Progress value={progress} size="md" orientation="horizontal">
+              <Progress value={progressRef.current} size="md" orientation="horizontal">
                 <ProgressFilledTrack />
              </Progress>
         </View>

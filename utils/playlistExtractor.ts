@@ -35,14 +35,14 @@ export function  getPlaylistItem({playlistPanelVideoRenderer}:{playlistPanelVide
      return null;
    }
    
-    const artistData=playlistPanelVideoRenderer.longBylineText.runs.find(elem=>elem.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig.pageType=="MUSIC_PAGE_TYPE_ARTIST")
+    const artistData=playlistPanelVideoRenderer.longBylineText.runs.filter(elem=>elem.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig.pageType=="MUSIC_PAGE_TYPE_ARTIST")
     const albumData=playlistPanelVideoRenderer.longBylineText.runs.find(elem=>elem.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig.pageType=="MUSIC_PAGE_TYPE_ALBUM")
 
     const song:Song={
        videoId:playlistPanelVideoRenderer.navigationEndpoint.watchEndpoint?.videoId || "",
        title:playlistPanelVideoRenderer.title.runs[0].text,
        duration:playlistPanelVideoRenderer.lengthText.runs[0].text,
-       artist:{browseId:artistData?.navigationEndpoint?.browseEndpoint?.browseId || "",name:artistData?.text || ""},
+       artist:artistData.map(elem=>{return {browseId:elem?.navigationEndpoint?.browseEndpoint?.browseId || "",name:elem?.text || ""}}),
        album:{browseId:albumData?.navigationEndpoint?.browseEndpoint?.browseId || "",title:albumData?.text ||""},
        thumbnail:playlistPanelVideoRenderer.thumbnail.thumbnails[0].url
     }

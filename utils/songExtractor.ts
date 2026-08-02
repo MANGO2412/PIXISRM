@@ -39,7 +39,10 @@ export const extractSongData = (item: MusicResponsiveListItemRenderer): Song | n
             const run = infoRuns[i];
             if (run.text === " • " || run.text === ", " || run.text === " & ") continue;
 
-            if (run.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig.pageType==="MUSIC_PAGE_TYPE_ARTIST") {
+            if(
+                run.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig.pageType==="MUSIC_PAGE_TYPE_ARTIST" 
+            
+            ) {
                 artist.push({
                     name:run.text,
                     browseId:run.navigationEndpoint.browseEndpoint.browseId

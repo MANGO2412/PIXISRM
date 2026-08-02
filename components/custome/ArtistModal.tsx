@@ -1,5 +1,17 @@
-import {View, Image, StyleSheet, Pressable, FlatList, ScrollView, Dimensions} from "react-native"
-import {useContext} from "react"
+import {
+    View, 
+    Image, 
+    StyleSheet, 
+    Pressable, 
+    FlatList, 
+    ScrollView, 
+    Dimensions,
+} from "react-native"
+
+import {
+    useContext
+} from "react"
+
 import {
     useRouter,
 } from "expo-router"
@@ -21,6 +33,14 @@ import {fetchStreamData,getSourceFromFormats} from '@/utils/fetchStramData'
 import {usePlayerContext} from "@/context/player/player-context"
 import type {PlayList} from "@/interface/playlist"
 import Storage from 'expo-sqlite/kv-store';
+
+import {
+ ArrowRight
+} from "lucide-react-native"
+
+import {
+ Icon
+} from "@/components/ui"
 
 
 
@@ -173,7 +193,14 @@ export default function ArtistModal({artist}: ArtistModalProps) {
                   </View>
                     {artist.songs && artist.songs.length > 0 && (
                         <View style={styles.section}>
-                          <Text size="lg" className="color-white font-bold mb-4">Canciones</Text>
+                          <Pressable
+                            onPress={()=>navigation.navigate(`/morecontent?browseId=${artist.moreContent?.find((item) => item.type === "song")?.browseId}&params=${artist.moreContent?.find((item) => item.type === "song")?.params}`)}
+                            style={styles.moreOptionContent}
+
+                          >
+                             <Text size="lg" className="color-white font-bold mb-4">Canciones</Text>
+                             <Icon as={ArrowRight} className="color-white" size="xl"/>
+                          </Pressable>
                            <FlatList
                             data={artist.songs as Song[]}
                             renderItem={renderSongItem}
@@ -243,7 +270,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     modalContent: {
-        backgroundColor: "#121212",
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         height: "90%",
@@ -317,4 +343,11 @@ const styles = StyleSheet.create({
         height: 100,
         borderRadius: 50,
     },
+    moreOptionContent:{
+       display:"flex",
+       flexDirection:"row",
+       justifyContent:"space-between",
+       paddingBlockStart:5,
+       paddingBlockEnd:5,
+    }
 })

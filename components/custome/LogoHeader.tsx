@@ -25,9 +25,9 @@ export function RightActionHeader({canGoBack,tintColor}:{ tintColor?: string | u
         <Link href="/search" push asChild>
          <MaterialIcons size={30} name='search' color={tintColor} />
         </Link>
-        <Link href="/setting" push asChild>
+        {/* <Link href="/setting" push asChild>
         <MaterialIcons size={30} name='settings' color={tintColor} />
-        </Link>
+        </Link> */}
     </View>
   )
 }

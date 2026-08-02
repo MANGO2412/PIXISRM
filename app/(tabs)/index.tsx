@@ -1,5 +1,4 @@
 import {View,FlatList,ScrollView} from "react-native"
-import {SafeAreaView} from "react-native-safe-area-context"
 import {Text} from '@/components/ui'
 
 import {Skeleton,SkeletonText} from "@/components/ui/skeleton"
@@ -68,17 +67,17 @@ export default function index(){
     )
 
     return(
-       <SafeAreaView>
-        <ScrollView >
-           <View >
+       <View>
+        <ScrollView  showsVerticalScrollIndicator={false}>
              <View style={{marginTop:3}}>
                 <HeaderText>
                     Selecciones rapidas
                 </HeaderText>
                 {relatedSongs && relatedSongs?.length > 0 ?(
-                    <FlatList
+                 <FlatList
                   horizontal
                   data={relatedSongs}
+                  showsHorizontalScrollIndicator={false}
                   renderItem={({item})=><RenderItem item={item}/>}
                 />
 
@@ -100,6 +99,7 @@ export default function index(){
                  <FlatList
                   horizontal
                   data={relatedAlbums}
+                  showsHorizontalScrollIndicator={false}
                   renderItem={({item})=><RenderAlbum item={item}/>}
                 />
                ):(
@@ -113,8 +113,7 @@ export default function index(){
                )}
             </View>
 
-
-              <View style={{marginTop:23,marginBottom:70}}>
+           <View style={{marginTop:23,marginBottom:70}}>
                 <HeaderText>
                    Artista similares
                 </HeaderText>
@@ -122,6 +121,7 @@ export default function index(){
                   <FlatList
                    horizontal
                    data={relatedArtists}
+                   showsHorizontalScrollIndicator={false}
                    renderItem={({item})=><RenderArtist item={item}/>}
                  />   
                 ):(
@@ -134,11 +134,10 @@ export default function index(){
                       }
                   </HStack>
                 )}           
-            </View>
            </View>
         </ScrollView>
         <FooterPlayer/>
-       </SafeAreaView>
+       </View>
         
     )
 }

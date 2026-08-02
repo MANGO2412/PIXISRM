@@ -67,6 +67,12 @@ export interface Artist{
         name:string,
         thumbnail:string,
         subscribers?:string
+    }[],
+    songsParams?:string
+    moreContent?:{
+        type:"song"|"artist"|"album",
+        browseId:string,
+        params:string
     }[]
 }
 
@@ -120,8 +126,9 @@ export type YTSectionContent =
     | { musicDescriptionShelfRenderer: YTMusicDescriptionShelfRenderer };
 
 export interface YTMusicShelfRenderer {
+    bottomEndpoint?: YTNavigationEndpoint;
     title?: {
-        runs: Array<{ text: string }>
+        runs: Array<{ text: string; navigationEndpoint?: YTNavigationEndpoint }>
     };
     subtitle?: {
         runs: Array<{ text: string }>

@@ -76,7 +76,8 @@ function extractArtistData(data: YTMusicResponse):Artist{
   const header=data.header?.musicImmersiveHeaderRenderer
   const content=data.contents.singleColumnBrowseResultsRenderer?.tabs[0].tabRenderer.content.sectionListRenderer.contents;   
   const carrouselContent=content?.filter(section=>"musicCarouselShelfRenderer" in section)
-  const songs=extractMusicData(content?.find(section=>"musicShelfRenderer" in section)?.musicShelfRenderer); 
+  const songsSection=content?.find(section=>"musicShelfRenderer" in section)?.musicShelfRenderer
+  const songs=extractMusicData(songsSection); 
   const albums=extractAlbumData(carrouselContent
                                       ?.find(section=>
                                           section
@@ -115,11 +116,19 @@ function extractArtistData(data: YTMusicResponse):Artist{
     albums:albums,
     relatedArtists:relatedArtists,
     singlesAndEps:singlesAndEps,
+    songsParams:songsSection?.title?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.params,
     browseId:header?.subscriptionButton.subscribeButtonRenderer.channelId || "",
     name:header?.title.runs[0].text || "",
     thumbnail:header?.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails[0].url || "",
     description:header?.description?.runs.map(elem=>elem.text).join(""),
-    subscribers:header?.subscriptionButton.subscribeButtonRenderer.subscriberCountText.runs[0].text
+    subscribers:header?.subscriptionButton.subscribeButtonRenderer.subscriberCountText.runs[0].text,
+    moreContent:[
+      {
+        type:"song",
+        browseId:songsSection?.bottomEndpoint?.browseEndpoint?.browseId || "",
+        params:songsSection?.bottomEndpoint?.browseEndpoint?.params || ""
+      }
+    ]
   }
 }
 
@@ -151,7 +160,8 @@ export default function useArtistPage({ browseId }: { browseId: string  }) {
                 localized:false,
             })
         });
-        const data= await response.json(); 
+        const data= await response.json();
+        console.log("console data:",data);
         const formatData= extractArtistData(data);
         setArtist(formatData);
       } catch (error) {

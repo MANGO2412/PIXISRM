@@ -51,7 +51,7 @@ export default function PlaylistModal({playlist, currentVideoId}: PlaylistModalP
                         {item.song.title}
                     </Text>
                     <Text size="sm" className="color-gray-400" numberOfLines={1}>
-                        {item.song.artist.map(elem=>elem.name).join(" & ")}
+                        { item.song.artist.length>0 ?item.song.artist.map(elem=>elem.name).join(" & "):"Artista desconocido"}
                     </Text>
                 </View>
                 

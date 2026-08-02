@@ -21,5 +21,6 @@ type BrowseEndpointContextSupportedConfigs={
 
 export interface BrowseEndpoint{
     browseId:string;
+    params?:string;
     browseEndpointContextSupportedConfigs:BrowseEndpointContextSupportedConfigs
 }

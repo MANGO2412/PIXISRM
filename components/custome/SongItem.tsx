@@ -20,7 +20,6 @@ import Storage from 'expo-sqlite/kv-store';
 
 import {GlobalContext} from "@/context/reduceContext";
 import {getParams,getPlaylist} from "@/utils/playlistExtractor"
-import type {PlayList} from "@/interface/playlist"
 
 import {fetchStreamData,getSourceFromFormats} from '@/utils/fetchStramData'
 import {usePlayerContext} from "@/context/player/player-context"
@@ -31,8 +30,8 @@ import {usePlayerContext} from "@/context/player/player-context"
 const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDetail?:boolean,customPlay?:() => Promise<void>}>=({thumbnail,videoId,artist,album,title,style,options,showDetail,customPlay})=>{
     let navigation=useRouter()
     const {updateSong}=useContext(SongContext)
-    const {dispatch,state}=useContext(GlobalContext)
-    const {setSelectSongPlaying,player}=usePlayerContext()
+    const {dispatch}=useContext(GlobalContext)
+    const {setSelectSongPlaying,player,setSelectRadioStation}=usePlayerContext()
 
     async function fetchNex({playlistId,params,videoId}:{playlistId?:string,params?:string,videoId?:string}) {
         try {
@@ -75,7 +74,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
           const playlistData=getPlaylist({nextResponse:nextPageRaw}) 
      
           
-          const CONCURRENT_LIMIT = 3
+          const CONCURRENT_LIMIT = 4
           let currentIndex = 0
 
 
@@ -83,8 +82,6 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
               if(!playlistData) return;
 
               while(currentIndex < playlistData?.length ){
-                  let playlist:PlayList[]=state.playlist || []
-
                   const index = currentIndex++
                   const elem = playlistData[index]
                   if (!elem?.song?.videoId) continue  
@@ -96,8 +93,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
                     ...elem,
                     song: {
                         ...elem.song,
-                        url:url
-                          
+                        url:url     
                     }
                   }});
 
@@ -120,6 +116,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
         if(!showDetail){
           player?.replace(""); 
           dispatch({ type: "SET_PLAYLIST", payload: [] });
+          setSelectRadioStation(undefined)
 
           const url=getSourceFromFormats((await fetchStreamData(videoId || ""))?.streamingData?.adaptiveFormats) || ""
           console.log("url from songitem",url)

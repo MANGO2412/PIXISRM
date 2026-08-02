@@ -2,7 +2,7 @@ import {
   View,
   StyleSheet,
   Alert,
-  Pressable
+  Pressable,
 } from "react-native"
 import {Text} from "@/components/ui"
 import ModalPlaylist from "@/components/custome/ModalPlaylist"
@@ -175,7 +175,12 @@ export default function songoptions(){
           <OptionEleement icon={<MaterialCommunityIcons name="playlist-music" size={30} color="white" />} label="Añadir a la cola"/>
           <OptionEleement onclick={()=>setModalVisible(true)} icon={<MaterialIcons size={30} name="playlist-add" color="white"/>} label="Añadir a una lista"/>
           <OptionEleement onclick={()=>navigation.replace(`/albummodal?browseId=${selectSong?.album?.browseId}`)} icon={<MaterialIcons size={30} name="album" color="white"/>} label="Ver album"/>
-          <OptionEleement onclick={()=>navigation.replace(`/artistmodal?browseId=${selectSong?.artist.browseId}`)}  icon={<FontAwesome name="user" size={30} color="white" />} label={`Mas de ${selectSong?.artist.name}`} />
+          {
+            selectSong?.artist.map((artist,index)=>(
+              <OptionEleement key={index} onclick={()=>navigation.replace(`/artistmodal?browseId=${artist.browseId}`)}  icon={<FontAwesome name="user" size={30} color="white" />} label={`Mas de ${artist.name}`} />
+            ))
+          }
+          {/* <OptionEleement onclick={()=>navigation.replace(`/artistmodal?browseId=${selectSong?.artist.browseId}`)}  icon={<FontAwesome name="user" size={30} color="white" />} label={`Mas de ${selectSong?.artist.name}`} /> */}
       </View>
       <ModalPlaylist
         modalVisible={modalVisible}

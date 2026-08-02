@@ -32,7 +32,7 @@ function formattedtoSong (item?:MusicResponsiveListItemRenderer | undefined):Son
         return {
             videoId:videoId,
             title:title,
-            artist:artistinfo.map(elem=>{
+            artist:artistinfo.filter(item=>item.text !=' & ').map(elem=>{
                 return {
                     name:elem.text,
                     browseId:elem.navigationEndpoint?.browseEndpoint?.browseId || ""

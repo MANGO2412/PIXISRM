@@ -53,10 +53,12 @@ async function extractMUsic(playlistId:string):Promise<Song[]>{
           videoId:infoMusic?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].navigationEndpoint?.watchEndpoint?.videoId || "",
           playlistId:infoMusic?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].navigationEndpoint?.watchEndpoint?.playlistId,
           title:infoMusic?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].text || "",
-          artist:{
-            browseId:infoArtist?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].navigationEndpoint?.browseEndpoint?.browseId || "",
-            name:infoArtist?.musicResponsiveListItemFlexColumnRenderer.text.runs?.[0].text || ""
-          },
+          artist:infoArtist?.musicResponsiveListItemFlexColumnRenderer.text.runs?.filter(item=>item.text !=' & ').map(item=>{
+            return {
+                browseId:item.navigationEndpoint?.browseEndpoint?.browseId || "",
+                name:item.text || ""
+            }
+          }) || [],
           thumbnail:item.musicResponsiveListItemRenderer.thumbnail?.musicThumbnailRenderer.thumbnail.thumbnails[0].url || " ",
           duration:item.musicResponsiveListItemRenderer.fixedColumns?.[0].musicResponsiveListItemFixedColumnRenderer.text.runs?.[0].text || "0:00"
        } as Song

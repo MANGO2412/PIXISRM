@@ -34,57 +34,52 @@ export default function AlbumModal() {
     const [isPressed, setIsPressed] = useState(false)
     const {player,selectSongPlaying,setSelectSongPlaying}=usePlayerContext()
     
-   const reloadplaylist=async(item: Song)=>{
-   
-    const url=getSourceFromFormats((await fetchStreamData(item.videoId || ""))?.streamingData?.adaptiveFormats) || ""
-    setSelectSongPlaying({
-        ...item,
-        url
-    })
-
-    let playlist:PlayList[]=[]
-     const CONCURRENT_LIMIT = 3
-      let currentIndex = 0
-
-
-     async function worker(){
-             if(!albumContent?.songs?.length) return
-            
-              while(currentIndex < albumContent?.songs?.length ){
-                  const index = currentIndex++
-                  const elem = albumContent.songs[index]
-                  if (!elem?.videoId) continue
-                  const responseUrl =await fetchStreamData(
-                        elem.videoId
-                  )
-                playlist[index] = {
-                  index,
-                  song: {
-                      ...elem,
-                      url:
-                          getSourceFromFormats(
-                              responseUrl?.streamingData?.adaptiveFormats
-                          ) || ""
-                  },
-                 params:"",
-                 playlistId:""
+    const reloadplaylist=async(item: Song)=>{
+     const url=getSourceFromFormats((await fetchStreamData(item.videoId || ""))?.streamingData?.adaptiveFormats) || ""
+     setSelectSongPlaying({
+         ...item,
+         playlistId: browseId || "",
+         url
+     })
+     let playlist:PlayList[]=[]
+      const CONCURRENT_LIMIT = 3
+       let currentIndex = 0
+       async function worker(){
+               if(!albumContent?.songs?.length) return      
+                while(currentIndex < albumContent?.songs?.length ){
+                    const index = currentIndex++
+                    const elem = albumContent.songs[index]
+                    if (!elem?.videoId) continue
+                    const responseUrl =await fetchStreamData(
+                          elem.videoId
+                    )
+                  playlist[index] = {
+                    index,
+                    song: {
+                        ...elem,
+                        playlistId: browseId || "",
+                        url:
+                            getSourceFromFormats(
+                                responseUrl?.streamingData?.adaptiveFormats
+                            ) || ""
+                    },
+                   params:"",
+                   playlistId: "",
+                  }
                 }
-              }
-      }
-      
-      await Promise.all(
-            Array.from(
-              {length:CONCURRENT_LIMIT},
-              ()=>worker()
-            )
-      )
-
-      dispatch({ type: "SET_PLAYLIST", payload: playlist });
-   }
+        }
+       await Promise.all(
+             Array.from(
+               {length:CONCURRENT_LIMIT},
+               ()=>worker()
+             )
+       )
+       dispatch({ type: "SET_PLAYLIST", payload: playlist });
+    }
 
     const playSong=(item: Song)=>{
         player?.replace("");
-        setSelectSongPlaying(item);
+        setSelectSongPlaying({...item,playlistId:browseId || ""});
         dispatch({ type: "SET_PLAYLIST", payload: [] }); 
         navigation.navigate("/playedsong");
         reloadplaylist(item)
@@ -99,7 +94,7 @@ export default function AlbumModal() {
     }
 
     const renderSongItem = ({ item, index }: { item: Song; index: number }) => {
-        const isPlaying = selectSongPlaying?.videoId === item.videoId;
+        const isPlaying = selectSongPlaying?.videoId === item.videoId && selectSongPlaying?.playlistId === browseId;
         return(
         <Pressable 
             style={[styles.songItem, isPlaying && styles.songItemPlaying]}

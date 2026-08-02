@@ -10,8 +10,6 @@ import {
   RNHostView,
 } from '@expo/ui/jetpack-compose';
 
-
-
 import {
     useRouter,
 } from "expo-router"
@@ -34,7 +32,7 @@ import SongProgressBar from "@/components/custome/SongProgrssBar"
 
 import {usePlaylists} from "@/hooks/usePlaylists"
 import {usePlaylistContent} from "@/hooks/usePlaylistContent"
-import { SongContext } from "@/context/song/song-context"
+
 
 
 import SlidedText from "@/components/custome/SlideText";
@@ -123,7 +121,6 @@ function PopoverOptions({song}: {song: Song}) {
 
 export default function PlayedSong() {
     let navigation=useRouter()
-    const {updateSong}=useContext(SongContext)
     const {state}=useContext(GlobalContext)
     const {addSongtoPlaylist}=usePlaylists()
     const {content,deleteSong}=usePlaylistContent({playlist_id:"1"})
@@ -150,16 +147,7 @@ export default function PlayedSong() {
             if((currentSong?.index|| 0)+1<=state.playlist.length){
                 player?.replace("")
                 const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
-                setSelectSongPlaying({
-                  url:nextSong.song.url,
-                  thumbnail: nextSong.song.thumbnail,
-                  videoId: nextSong.song.videoId,
-                  artist: nextSong.song.artist,
-                  title: nextSong.song.title,
-                  album: nextSong.song.album,
-                  isThisSongWithPlaylist:true,
-                  index:nextSong.index
-                })
+                setSelectSongPlaying(nextSong?.song)
             }
         }
     }
@@ -170,16 +158,7 @@ export default function PlayedSong() {
             if((currentSong?.index|| 0)-1>=0){
                  player?.replace("")
                 const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)-1]
-                setSelectSongPlaying({
-                  url:nextSong.song.url,    
-                  thumbnail: nextSong.song.thumbnail,
-                  videoId: nextSong.song.videoId,
-                  artist: nextSong.song.artist,
-                  title: nextSong.song.title,
-                  album: nextSong.song.album,
-                  isThisSongWithPlaylist:true,
-                  index:nextSong.index
-                })
+                setSelectSongPlaying(nextSong?.song)
             }
         }
     }
@@ -203,13 +182,6 @@ export default function PlayedSong() {
         setRepeat(!repeat)
     }
 
-    const openSongOptions=()=>{
-       if(selectSongPlaying){
-          navigation.navigate("/songoptions");
-          updateSong(selectSongPlaying)
-       }
-    }
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -222,14 +194,12 @@ export default function PlayedSong() {
             />
 
             <View style={styles.content}>
-
                 <View style={styles.imageContainer}>
                     <Image
                         style={styles.albumArt}
                         source={{uri: selectSongPlaying?.thumbnail.replace("w60-h60", "w300-h300") || "https://via.placeholder.com/300"}}
                     />
                 </View>
-
                 <View style={styles.songInfo}>
                     {(selectSongPlaying?.title || "Song Unknown").trim().length>=35?(
                       <SlidedText value={selectSongPlaying?.title || "Song Unknown"} />
@@ -249,7 +219,7 @@ export default function PlayedSong() {
                             return(
                              <Pressable key={index} onPress={()=>navigation.replace(`/artistmodal?browseId=${elem.browseId}`)}>
                                 <Text size="lg" className="color-gray-400 text-center ">
-                                     {elem.name || "Artista desconocido"}
+                                     {elem.name || "Artista desconocido"} {index < (selectSongPlaying?.artist?.length || 0) - 1 ? " & " : ""}
                                 </Text>
                              </Pressable>
                             )

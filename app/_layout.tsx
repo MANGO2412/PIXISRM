@@ -40,19 +40,18 @@ export default function RootLayout(){
                           headerRight:props=> <RightActionHeader {...props}/>,
                         }}/>  
                      {/*modals  */}
-                     <Stack.Screen
+                     {/* <Stack.Screen
                        name="setting"
                        options={{
                            presentation:"modal",
                            headerTitle:"Configuracion"
                        }}
-                     />
+                     /> */}
 
                      <Stack.Screen
                        name="search"
                        options={{
                           presentation:"modal",
-
                           headerTitle: props => <SearchHeader {...props}/>
                        }}
                      />
@@ -74,8 +73,6 @@ export default function RootLayout(){
                      }} 
                     />
 
-                    
-              
                     <Stack.Screen
                         name="artistmodal"
                         options={{
@@ -87,32 +84,52 @@ export default function RootLayout(){
                         }}
                     />
 
-                  <Stack.Screen
-                        name="albummodal"
-                        options={{
-                            presentation:"modal",
-                            headerTitle:"",
-                            headerStyle:{backgroundColor:"rgba(0, 0, 0)"},
-                            headerTintColor:"#fff",
-                            headerTitleStyle:{fontWeight:"bold"}
-                        }}
+                    <Stack.Screen
+                       name="morecontent"
+                       options={{
+                           presentation:"modal",
+                           headerTitle:"",
+                           headerStyle:{backgroundColor:"rgba(0, 0, 0)"},
+                           headerTintColor:"#fff",
+                           headerTitleStyle:{fontWeight:"bold"}
+                       }}
+
                     />
+
+                    <Stack.Screen
+                          name="albummodal"
+                          options={{
+                              presentation:"modal",
+                              headerTitle:"",
+                              headerStyle:{backgroundColor:"rgba(0, 0, 0)"},
+                              headerTintColor:"#fff",
+                              headerTitleStyle:{fontWeight:"bold"}
+                          }}
+                      />
 
                     <Stack.Screen
                       name="songoptions"
                       options={{
                           presentation:"formSheet",
                           sheetCornerRadius: 40,
-                          sheetAllowedDetents:[0.5],
+                          sheetAllowedDetents:[0.6],
                           sheetExpandsWhenScrolledToEdge:false,
                           contentStyle:{backgroundColor:"#343738"},
-                          
                           
                       }}
                     />
 
                     <Stack.Screen
                       name="playedsong"
+                      options={{
+                          presentation:"formSheet",
+                          sheetCornerRadius: 40,
+                          contentStyle:{backgroundColor:"#343738"}
+                      }}
+                    />
+
+                    <Stack.Screen
+                      name="playedradio"
                       options={{
                           presentation:"formSheet",
                           sheetCornerRadius: 40,

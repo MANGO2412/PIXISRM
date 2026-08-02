@@ -1,5 +1,10 @@
 import {
- createContext, useContext, useState, ReactNode,useEffect, useMemo
+ createContext, 
+ useContext, 
+ useState, 
+ ReactNode,
+ useEffect, 
+ useMemo
 } from "react"
 
 import {
@@ -10,12 +15,23 @@ import {
     useAudioPlaylistStatus,
     AudioSource
 } from "expo-audio";
-import {Song} from "@/interface/song"
+
+import type {
+    RadioStation
+} from "@/interface/radio"
+
+import {
+    Song
+} from "@/interface/song"
+
+
 
 interface PlayerContextType {
     player: ReturnType<typeof useAudioPlayer> | null,
     setSelectSongPlaying:(selectSongPlaying:Song|undefined)=>void,
+    setSelectRadioStation:(selectRadioStation:RadioStation|undefined)=>void,
     selectSongPlaying:Song|undefined,
+    selectRadioStation:RadioStation|undefined,
     isLoadingPlayer:boolean
 }
 
@@ -29,7 +45,10 @@ const  PlayerStatusContext = createContext<PlayerStatusContextType | null>(null)
 
 export function PlayerProvider({ children }: { children: ReactNode })  {
     const [isLoadingPlayer,setIsLoadingPlayer]=useState<boolean>(false)
-    const [selectSongPlaying,setSelectSongPlaying]=useState<Song>()
+    const [selectSongPlaying,setSelectSongPlaying]=useState<Song>();
+    const [selectRadioStation,setSelectRadioStation]=useState<RadioStation>();
+
+
     const player = useAudioPlayer()
     const status = useAudioPlayerStatus(player)
 
@@ -53,8 +72,10 @@ export function PlayerProvider({ children }: { children: ReactNode })  {
         isLoadingPlayer,
         player,
         setSelectSongPlaying,
-        selectSongPlaying
-    }), [isLoadingPlayer, player, selectSongPlaying]);
+        selectSongPlaying,
+        setSelectRadioStation,
+        selectRadioStation
+    }), [isLoadingPlayer, player, selectSongPlaying,selectRadioStation]);
 
     const statusValue = useMemo(() => ({ status }), [status]);
 

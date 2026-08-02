@@ -8,6 +8,7 @@ import {
   X
 } from "lucide-react-native"
 import SongItem from "@/components/custome/SongItem"
+import RadioItem from "@/components/custome/RadioItem"
 import {usePlayerContext,usePlayerStatus} from "@/context/player/player-context"
 import {GlobalContext} from "@/context/reduceContext/"
 
@@ -15,14 +16,14 @@ import {GlobalContext} from "@/context/reduceContext/"
 
 const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
  const [updateLockScreen,setUpdateLockScreen]=useState<boolean>(false);
- const {player,selectSongPlaying,setSelectSongPlaying}=usePlayerContext()
+ const {player,selectSongPlaying,setSelectSongPlaying,selectRadioStation,setSelectRadioStation}=usePlayerContext()
  const {status}=usePlayerStatus()
  const {state}=useContext(GlobalContext)
  const playlistRef = useRef(state.playlist);
  const progressRef = useRef(0);
 
   
-    useEffect(() => {
+  useEffect(() => {
      if (status?.isLoaded  && status.duration > 0) {
         const value = (status.currentTime / status.duration) * 100
         progressRef.current=value
@@ -73,6 +74,18 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
         return () => subscription?.remove();
     },[selectSongPlaying])
 
+    useEffect(()=>{
+        if (!player || !selectRadioStation || player.isLoaded) return
+
+        player.replace(selectRadioStation?.url || "")
+        player.play();
+        player.setActiveForLockScreen(true, {
+           title: selectRadioStation.name || "Unknown Name radio",
+           artist: selectRadioStation?.country || "Unknown Country radio",
+           artworkUrl:selectRadioStation?.favicon?selectRadioStation?.favicon != "" ? selectRadioStation.favicon: undefined:undefined
+         })
+    },[selectRadioStation])
+
     const nextPlaylist=()=>{
         const playlist = playlistRef.current;
         console.log(playlist)
@@ -85,16 +98,7 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
                 const nextSong=playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
                 player?.replace("")
                 setUpdateLockScreen(true)
-                setSelectSongPlaying({
-                  url:nextSong.song.url,
-                  thumbnail: nextSong.song.thumbnail,
-                  videoId: nextSong.song.videoId,
-                  artist: nextSong.song.artist,
-                  title: nextSong.song.title,
-                  album: nextSong.song.album,
-                  isThisSongWithPlaylist:true,
-                  index:nextSong.index
-                })
+                setSelectSongPlaying(nextSong?.song)
             }
         }
     }
@@ -108,9 +112,31 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
     }
 
 
+  if(selectRadioStation){
+    return(
+         <View style={[{ bottom:notViewWithMenu?50:0},style.container ]}>
+             <View style={[style.subContainer,{ justifyContent:"space-between",padding:5}]}>
+                <RadioItem style={style.songItem} radio={selectRadioStation}  typeView="footer" />
+               <View style={style.containerControles}>
+                  <Pressable style={style.playBtn} onPress={() => {playAudio()}}>
+                     <Icon as={status?.playing ? Pause : Play} className="color-white" size="xl" />
+                  </Pressable>
+                  <Pressable onPress={() => {player?.replace(""); setSelectRadioStation(undefined)}}>
+                      <Icon as={X} className="color-white" size="xl" />
+                  </Pressable>
+               </View>
+             </View>
+            <Progress value={100} size="md" orientation="horizontal">
+                <ProgressFilledTrack />
+             </Progress>
+        </View>
+    )
+  }
+
+
    if(selectSongPlaying){
       return(
-         <View style={[{ bottom:notViewWithMenu?50:0},style.container]}>
+         <View style={[{ bottom:notViewWithMenu?50:0},style.container ]}>
              <View style={style.subContainer}>
                <SongItem style={style.songItem} videoId={selectSongPlaying?.videoId||""} artist={selectSongPlaying?.artist || {browseId:"",name:""}} title={selectSongPlaying?.title || ""} thumbnail={selectSongPlaying?.thumbnail || ""}  showDetail/>
                <View style={style.containerControles}>
@@ -149,7 +175,7 @@ const style=StyleSheet.create({
     },
     subContainer:{
         display:"flex",
-        flexDirection:"row"
+        flexDirection:"row",
     },
     songItem:{
         marginStart:20,

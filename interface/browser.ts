@@ -25,13 +25,37 @@ export interface MusicResponsiveListItemFlexColumnRenderer{
 }
 
 
+export interface MusicResponsiveListItemFixedColumnRenderer{
+    text:{
+        runs:Run[]
+    },
+    displayPriority:string
+}
+
 export interface MusicResponsiveListItemRenderer{
-    thumbnail:{
+    thumbnail?:{
          musicThumbnailRenderer:MusicThumbnailRenderer        
     },
     flexColumns:{
         musicResponsiveListItemFlexColumnRenderer:MusicResponsiveListItemFlexColumnRenderer
     }[],
+    fixedColumns?:{
+        musicResponsiveListItemFixedColumnRenderer:MusicResponsiveListItemFixedColumnRenderer
+    }[],
+    overlay?:{
+        musicItemThumbnailOverlayRenderer:{
+            content:{
+                musicPlayButtonRenderer:{
+                    playNavigationEndpoint:{
+                        watchEndpoint:{
+                            videoId:string;
+                            playlistId:string
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -68,12 +92,34 @@ export interface MusicCarouselShelfRenderer{
     }[]
 }
 
+export interface MusicPlaylistShelfRenderer{
+    contents:{
+        musicResponsiveListItemRenderer:MusicResponsiveListItemRenderer
+    }[]
+}
+
 export interface browserResponse{
     contents:{
         sectionListRenderer:{
             contents:{
-                musicCarouselShelfRenderer:MusicCarouselShelfRenderer
+                musicCarouselShelfRenderer?:MusicCarouselShelfRenderer,
+                musicPlaylistShelfRenderer?:MusicPlaylistShelfRenderer
             }[]
         }
+        singleColumnBrowseResultsRenderer?:{
+            tabs:{
+               tabRenderer:{
+                 content:{
+                    sectionListRenderer:{
+                          contents:{
+                                  musicCarouselShelfRenderer?:MusicCarouselShelfRenderer,
+                                  musicPlaylistShelfRenderer?:MusicPlaylistShelfRenderer
+                          }[]
+                    }
+                 }
+               }
+            }[]
+        }
+
     }
 }

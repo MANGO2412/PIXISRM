@@ -7,10 +7,13 @@ import {
   Pause,
   X
 } from "lucide-react-native"
+
 import SongItem from "@/components/custome/SongItem"
 import RadioItem from "@/components/custome/RadioItem"
 import {usePlayerContext,usePlayerStatus} from "@/context/player/player-context"
 import {GlobalContext} from "@/context/reduceContext/"
+
+import {fetchStreamData,getSourceFromFormats} from "@/utils/fetchStramData";
 
 
 
@@ -18,7 +21,8 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
  const [updateLockScreen,setUpdateLockScreen]=useState<boolean>(false);
  const {player,selectSongPlaying,setSelectSongPlaying,selectRadioStation,setSelectRadioStation}=usePlayerContext()
  const {status}=usePlayerStatus()
- const {state}=useContext(GlobalContext)
+ const {state,dispatch}=useContext(GlobalContext)
+ 
  const playlistRef = useRef(state.playlist);
  const progressRef = useRef(0);
 
@@ -45,13 +49,30 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
       
         player.replace(selectSongPlaying?.url || "")
         player.play();
+        
 
-        let subscription=player.addListener("playbackStatusUpdate",(status)=>{
+        let subscription=player.addListener("playbackStatusUpdate",async(status)=>{
             if(status.didJustFinish){
                 console.log('Audio has finished playing! in footerplayer');
-                nextPlaylist()
+                await nextPlaylist()
             }
         });
+
+
+        let subciption2=player.addListener("trackManager",async (status)=>{
+            console.log("se esta ejecuntando")
+            if(status.isPressedNext){
+                console.log("Avanza al siguiente elemento de la lista")
+                 await nextPlaylist();
+            }
+
+            if(status.isPressedPrevious){
+                console.log("regresa al siguiente elemento")
+                await backPlaylist();
+            }
+        })
+
+
   
         if(updateLockScreen){
             player.updateLockScreenMetadata({
@@ -68,10 +89,17 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
            artworkUrl:
              selectSongPlaying.thumbnail?.replace("w60-h60", "w400-h400") ||
              "https://via.placeholder.com/150",
+           
+         },{
+            showSeekBackward:true,
+            showSeekForward:true
          })
         }
 
-        return () => subscription?.remove();
+        return () => {
+            subscription?.remove()
+            subciption2?.remove()
+        };
     },[selectSongPlaying])
 
     useEffect(()=>{
@@ -86,19 +114,60 @@ const FooterPlayer=({notViewWithMenu}:{notViewWithMenu?:boolean})=>{
          })
     },[selectRadioStation])
 
-    const nextPlaylist=()=>{
+    const nextPlaylist=async ()=>{
         const playlist = playlistRef.current;
-        console.log(playlist)
         if(playlist){
-            console.log("snext is execute from footer in line 96")
-            const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
+            const currentSong=playlistRef.current?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             
 
             if((currentSong?.index|| 0)+1<playlist.length){
                 const nextSong=playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
+               
+                setUpdateLockScreen(true);
+                console.log(nextSong)
+                player?.replace("");
+
+                if(!nextSong.song.url){
+                    const responseUrl= await fetchStreamData(nextSong.song.videoId);
+                    const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+                    dispatch({
+                      type: "UPDATE_PLAYLIST",
+                      payload: {
+                        videoId: nextSong.song.videoId,
+                        song: { url: url }
+                      }
+                    });
+                    setSelectSongPlaying({ ...nextSong.song, url:url  })
+                }else{
+                    setSelectSongPlaying(nextSong.song)
+                }       
+            }
+        }
+    }
+
+   const backPlaylist=async()=>{
+        const playlist = playlistRef.current;
+         if(playlist){
+            const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
+            if((currentSong?.index|| 0)-1>=0){
+                const backSong=playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)-1]
                 player?.replace("")
                 setUpdateLockScreen(true)
-                setSelectSongPlaying(nextSong?.song)
+                if(!backSong.song.url){
+                    const responseUrl= await fetchStreamData(backSong.song.videoId);
+                    const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+                    dispatch({
+                      type: "UPDATE_PLAYLIST",
+                      payload: {
+                        videoId: backSong.song.videoId,
+                        song: { url: url }
+                      }
+                    });
+                    setSelectSongPlaying({ ...backSong.song, url:url  })
+
+                }else{
+                  setSelectSongPlaying(backSong?.song)
+                }
             }
         }
     }

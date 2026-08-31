@@ -1,5 +1,5 @@
 import {useState,useEffect} from "react"
-import {ANDROID_VR} from "@/constant/clientYoutube"
+import {VISION_OS} from "@/constant/clientYoutube"
 import {URL_API_YOUTUBE} from "@/constant/initialValue"
 
 import type {PlayerResponse} from "@/interface/player"
@@ -13,7 +13,9 @@ export default function usePlayerPage(videoId:string){
             console.log("Fetching related songs for videoId:", videoId)
             try{
                 const visitorData = await Storage.getItem('visitorData');
-                ANDROID_VR.visitorData = visitorData;
+                console.log(visitorData)
+                VISION_OS.visitorData=visitorData || ""
+                console.log(VISION_OS)
                 const response=await fetch(`${URL_API_YOUTUBE}player?prettyPrint=false`,{
                     method:"POST",
                     headers:{
@@ -23,7 +25,7 @@ export default function usePlayerPage(videoId:string){
                    },
                    body:JSON.stringify({
                        context:{
-                           client:ANDROID_VR
+                           client:VISION_OS
                        },
                        videoId:videoId,
                    })           

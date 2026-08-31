@@ -4,7 +4,8 @@ enum ReducerActionType {
   SET_RESULTS = "SET_RESULTS",
   SET_QUERY = "SET_QUERY",
   SET_PLAYLIST="SET_PLAYLIST",
-  PUSH_PLAYLIST="PUSH_PLAYLIST"
+  PUSH_PLAYLIST="PUSH_PLAYLIST",
+  UPDATE_PLAYLIST="UPDATE_PLAYLIST"
 }
 interface ReducerAction {
   type: ReducerActionType;
@@ -28,6 +29,15 @@ export const reducer= (state: ReducerState, action: ReducerAction): ReducerState
         return {...state,playlist:action.payload}
     case ReducerActionType.PUSH_PLAYLIST:
       return { ...state, playlist: [...(state.playlist || []), action.payload] };
+    case ReducerActionType.UPDATE_PLAYLIST:
+      return {
+        ...state,
+        playlist: state.playlist?.map(item =>
+          item.song.videoId === action.payload.videoId
+            ? { ...item, song: { ...item.song, ...action.payload.song } }
+            : item
+        )
+      };
     default:
       return state;
   }

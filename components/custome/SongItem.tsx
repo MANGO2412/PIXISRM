@@ -72,40 +72,39 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
           const {playlistId,params}=getParams({nextResponse:nextPageData})
           const nextPageRaw=await fetchNex({videoId,playlistId,params})
           const playlistData=getPlaylist({nextResponse:nextPageRaw}) 
-     
+          dispatch({type: "SET_PLAYLIST", payload: playlistData})
           
-          const CONCURRENT_LIMIT = 4
-          let currentIndex = 0
+          // const CONCURRENT_LIMIT = 4
+          // let currentIndex = 0
 
 
-          async function worker(){
-              if(!playlistData) return;
+          // async function worker(){
+          //     if(!playlistData) return;
 
-              while(currentIndex < playlistData?.length ){
-                  const index = currentIndex++
-                  const elem = playlistData[index]
-                  if (!elem?.song?.videoId) continue  
-                  const responseUrl =await fetchStreamData(
-                          elem.song.videoId
-                  )
-                  const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
-                  dispatch({ type: "PUSH_PLAYLIST", payload: {
-                    ...elem,
-                    song: {
-                        ...elem.song,
-                        url:url     
-                    }
-                  }});
-
-              }
-          }
+          //     while(currentIndex < playlistData?.length ){
+          //         const index = currentIndex++
+          //         const elem = playlistData[index]
+          //         if (!elem?.song?.videoId) continue  
+          //         const responseUrl =await fetchStreamData(
+          //                 elem.song.videoId
+          //         )
+          //         const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+          //         dispatch({ type: "PUSH_PLAYLIST", payload: {
+          //           ...elem,
+          //           song: {
+          //               ...elem.song,
+          //               url:url     
+          //           }
+          //         }});
+          //     }
+          // }
           
-        await Promise.all(
-            Array.from(
-              {length:CONCURRENT_LIMIT},
-              ()=>worker()
-            )
-        )
+        // await Promise.all(
+        //     Array.from(
+        //       {length:CONCURRENT_LIMIT},
+        //       ()=>worker()
+        //     )
+        // )
 
       
        
@@ -113,6 +112,7 @@ const  SongItem:FC<Song & {style?:StyleProp<ViewStyle>,options?:boolean,showDeta
 
     const playSong=async()=>{
         navigation.navigate("/playedsong");
+
         if(!showDetail){
           player?.replace(""); 
           dispatch({ type: "SET_PLAYLIST", payload: [] });

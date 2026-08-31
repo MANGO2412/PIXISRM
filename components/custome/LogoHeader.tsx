@@ -32,7 +32,23 @@ export function RightActionHeader({canGoBack,tintColor}:{ tintColor?: string | u
   )
 }
 
-export function RightActionHeaderPlaylist({canGoBack,tintColor,playlist_id,name,onChangeName}:{ tintColor?: string | undefined; canGoBack?: boolean | undefined;playlist_id?:string,name:string,onChangeName:(newName:string)=>void }){
+export function RightActionHeaderPlaylist(
+  {
+    canGoBack,
+    tintColor,
+    playlist_id,
+    name,
+    onChangeName,
+    download
+  }:
+  { 
+    tintColor?: string | undefined; 
+    canGoBack?: boolean | undefined;
+    playlist_id?:string,
+    name:string,
+    download:string,
+    onChangeName:(newName:string)=>void 
+  }){
     let navigation=useRouter();
     const {deletePlaylist,updateName}=usePlaylists()
     const [modalVisible,setModalVisible]=useState<boolean>(false)
@@ -48,7 +64,7 @@ export function RightActionHeaderPlaylist({canGoBack,tintColor,playlist_id,name,
     }
 
     const handleChangeName=async()=>{
-      await updateName(newPlaylistName,Number(playlist_id))
+      await updateName(newPlaylistName,Number(playlist_id),Number(download))
       onChangeName(newPlaylistName)
       setModalVisible(false)
     }

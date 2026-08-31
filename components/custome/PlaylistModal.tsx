@@ -1,7 +1,11 @@
+import {useContext} from "react"
 import {View, Image, StyleSheet, Pressable, FlatList,ActivityIndicator} from "react-native"
 import {Text} from "@/components/ui"
 import type {PlayList} from "@/interface/playlist"
 import {usePlayerContext} from "@/context/player/player-context"
+import {fetchStreamData,getSourceFromFormats} from "@/utils/fetchStramData";
+import {GlobalContext} from "@/context/reduceContext/"
+
 
 interface PlaylistModalProps {
     playlist: PlayList[] | null
@@ -10,20 +14,47 @@ interface PlaylistModalProps {
 
 export default function PlaylistModal({playlist, currentVideoId}: PlaylistModalProps) {
     const {player,setSelectSongPlaying,selectSongPlaying}=usePlayerContext()
+     const {dispatch}=useContext(GlobalContext)
  
-    const handlePress = (item: PlayList) => {
-        setSelectSongPlaying({
-            thumbnail: item.song.thumbnail,
-            videoId: item.song.videoId,
-            artist: item.song.artist,
-            title: item.song.title,
-            album: item.song.album,
-            url:item.song.url,
-            isThisSongWithPlaylist:true,
-            index:item.index
-        })
+    const handlePress = async(item: PlayList) => {
+        console.log("Element song is getting when the user press a song item",item);
+        if(!item.song.url){
+             const responseUrl= await fetchStreamData(item.song.videoId);
+             const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+             dispatch({
+                    type: "UPDATE_PLAYLIST",
+                    payload: {
+                      videoId: item.song.videoId,
+                      song: { url: url }
+                    }
+             });
 
-         player?.replace(item.song.url|| "")            
+           setSelectSongPlaying({
+                 thumbnail: item.song.thumbnail,
+                 videoId: item.song.videoId,
+                 artist: item.song.artist,
+                 title: item.song.title,
+                 album: item.song.album,
+                 url:url,
+                 isThisSongWithPlaylist:true,
+                 index:item.index
+             })
+             
+            player?.replace(url) 
+        }else{
+          setSelectSongPlaying({
+              thumbnail: item.song.thumbnail,
+              videoId: item.song.videoId,
+              artist: item.song.artist,
+              title: item.song.title,
+              album: item.song.album,
+              url:item.song.url,
+              isThisSongWithPlaylist:true,
+              index:item.index
+          })
+
+         player?.replace(item.song.url|| "")  
+        }          
     }
 
     const renderItem = ({item}: {item: PlayList}) => {

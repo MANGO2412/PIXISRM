@@ -147,7 +147,7 @@ export default function AlbumModal() {
                                 style={styles.albumThumbnailContainer}
                               />
                               
-                                <View style={{position:"absolute",top:-55,right:90, zIndex: 9999,elevation: 20 }}>
+                           <View style={{position:"absolute",top:-55,right:90, zIndex: 9999,elevation: 20 }}>
                                  <Pressable 
                                      onPress={()=>{playSong(albumContent.songs?.[0] as Song)}}  
                                      onPressIn={() => setIsPressed(true)}

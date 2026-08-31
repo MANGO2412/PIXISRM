@@ -42,7 +42,8 @@ export default async function  migrateDbIfNeeded(db: SQLiteDatabase){
      await db.execAsync(`
        CREATE TABLE IF NOT EXISTS  playlists(
          id INTEGER PRIMARY KEY NOT NULL,
-         nombre  TEXT NOT NULL
+         nombre  TEXT NOT NULL,
+         download INTEGER NOT NULL CHECK(download in (0,1))
        );
 
        CREATE TABLE IF NOT EXISTS  songs(
@@ -57,7 +58,7 @@ export default async function  migrateDbIfNeeded(db: SQLiteDatabase){
        );
     `)
 
-    await db.runAsync('INSERT INTO playlists (nombre) VALUES (?)', 'Mi musica favorita');
+    await db.runAsync('INSERT INTO playlists (nombre,download) VALUES (?,?)', 'Mi musica favorita',0);
     currentDbVersion = 1;
     await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
    }

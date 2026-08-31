@@ -20,12 +20,12 @@ export const WEB_REMIX:ClientYoutube={
 }
 
 
-export const ANDROID_VR:ClientYoutube={
-     clientName:"ANDROID_VR",
-     clientVersion : "1.65.10",
-     clientId : "28",
-     userAgent:"com.google.android.apps.youtube.vr.oculus/1.65.10 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip",
-     osVersion:"12L",
+export const VISION_OS:ClientYoutube={
+     clientName:"VISIONOS",
+     clientVersion : "1.02",
+     clientId : "101",
+     userAgent:"Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
+     osVersion:"26.5.23O47",
      localized:true
 }
 

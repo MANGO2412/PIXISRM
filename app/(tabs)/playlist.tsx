@@ -36,6 +36,7 @@ const ITEM_WIDTH = (width - 48) / 2;
 interface PlaylistItem {
   id: number;
   nombre: string;
+  download:number;
 }
 
 export default function Playlist() {
@@ -60,7 +61,7 @@ export default function Playlist() {
     const isDefault = item.nombre === "Mi musica favorita";
 
     return (
-      <TouchableOpacity onPress={()=>navigation.navigate(`/playlistcontent?playlist_id=${item.id}&&nombre=${item.nombre}`)} style={styles.playlistCard}>
+      <TouchableOpacity onPress={()=>navigation.navigate(`/playlistcontent?playlist_id=${item.id}&&nombre=${item.nombre}&&download=${item.download}`)} style={styles.playlistCard}>
         {isDefault ? (
           <View style={styles.defaultPlaylistCover}>
             <Heart size={40} color="#fff" fill="#fff" />

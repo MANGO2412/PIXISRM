@@ -33,12 +33,11 @@ import SongProgressBar from "@/components/custome/SongProgrssBar"
 import {usePlaylists} from "@/hooks/usePlaylists"
 import {usePlaylistContent} from "@/hooks/usePlaylistContent"
 
-
-
 import SlidedText from "@/components/custome/SlideText";
 import ModalPlaylist from "@/components/custome/ModalPlaylist"
+import  type {Song} from "@/interface/song";
 
-import  type {Song} from "@/interface/song"
+import {fetchStreamData,getSourceFromFormats} from "@/utils/fetchStramData";
 
 
 function PopoverOptions({song}: {song: Song}) {
@@ -121,7 +120,7 @@ function PopoverOptions({song}: {song: Song}) {
 
 export default function PlayedSong() {
     let navigation=useRouter()
-    const {state}=useContext(GlobalContext)
+    const {state,dispatch}=useContext(GlobalContext)
     const {addSongtoPlaylist}=usePlaylists()
     const {content,deleteSong}=usePlaylistContent({playlist_id:"1"})
     const {player,setSelectSongPlaying,selectSongPlaying}=usePlayerContext()
@@ -141,24 +140,53 @@ export default function PlayedSong() {
         }  
     }
 
-    const nextPlaylist=()=>{
+    const nextPlaylist=async ()=>{
         if(state.playlist){
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             if((currentSong?.index|| 0)+1<=state.playlist.length){
-                player?.replace("")
-                const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1]
-                setSelectSongPlaying(nextSong?.song)
+                player?.replace("");
+                const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)+1];
+                if(!nextSong.song.url){
+                     const responseUrl= await fetchStreamData(nextSong.song.videoId);
+                     const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+                     dispatch({
+                      type: "UPDATE_PLAYLIST",
+                      payload: {
+                        videoId: nextSong.song.videoId,
+                        song: { url: url }
+                      }
+                    });
+                    setSelectSongPlaying({ ...nextSong.song, url:url  })
+                }else{
+                    setSelectSongPlaying(nextSong?.song)
+                }
+                
             }
         }
     }
     
-    const backPlaylist=()=>{
+    const backPlaylist=async()=>{
          if(state.playlist){
             const currentSong=state.playlist?.find(item=>item.song.videoId==selectSongPlaying?.videoId)
             if((currentSong?.index|| 0)-1>=0){
-                 player?.replace("")
-                const nextSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)-1]
-                setSelectSongPlaying(nextSong?.song)
+                player?.replace("")
+                const backSong=state.playlist.sort((a, b) => a.index - b.index)[(currentSong?.index|| 0)-1]
+                
+                if(!backSong.song.url){
+                    const responseUrl= await fetchStreamData(backSong.song.videoId);
+                    const url = getSourceFromFormats(responseUrl?.streamingData?.adaptiveFormats) || "";
+                    dispatch({
+                      type: "UPDATE_PLAYLIST",
+                      payload: {
+                        videoId: backSong.song.videoId,
+                        song: { url: url }
+                      }
+                    });
+                    setSelectSongPlaying({ ...backSong.song, url:url  })
+
+                }else{
+                  setSelectSongPlaying(backSong?.song)
+                }
             }
         }
     }

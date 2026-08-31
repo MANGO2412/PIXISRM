@@ -2,12 +2,15 @@ import { useState,  useCallback } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 import { useFocusEffect } from "expo-router";
 import type {Song} from "@/interface/song"
+import {downloadSong} from "@/utils/fetchStramData"
+
 
 
 
 export interface Playlist {
   id: number;
   nombre: string;
+  download:number;
 }
 
 interface SongPlaylist{
@@ -57,8 +60,9 @@ export function usePlaylists() {
   const createPlaylist = useCallback(async (name: string) => {
     try {
       await db.runAsync(
-        "INSERT INTO playlists (nombre) VALUES (?)",
-        name
+        "INSERT INTO playlists (nombre,download) VALUES (?, ?)",
+        name,
+        0
       );
       await fetchPlaylists();
       return true;
@@ -80,11 +84,12 @@ export function usePlaylists() {
     }
   }, [fetchPlaylists]);
 
-  const updateName=useCallback(async(newName:string,id:number)=>{
+  const updateName=useCallback(async(newName:string,id:number,download:number)=>{
     try {
       await db.runAsync(
-        "UPDATE playlists set nombre=?  WHERE  id =?",
+        "UPDATE playlists set nombre=? , set downlaod= ? WHERE  id =?",
          newName,
+         download,
          id
       );
       await fetchPlaylists();
@@ -97,15 +102,21 @@ export function usePlaylists() {
 
   const addSongtoPlaylist=useCallback(async(song:Song,playlistid:string[])=>{
      try {
-       const data=formatSongToSongPlaylist(song);
+      console.log("se esta ejecuntado")
+      if(song.url){
+        console.log("descargando")
+        await downloadSong(song.url);
+      }
 
+       const data=formatSongToSongPlaylist(song);
        for (const element of  playlistid) {
          await db.runAsync("INSERT INTO songs (videoId,artist,title,album,thumbnail,playlist_id) VALUES (?,?,?,?,?,?)",data.videoId,data.artist,data.title,data.album,data.thumbnail,element)
        }
 
+       console.log("finaliza")
        return true;
      } catch (error) {
-      console.error("Error  adding song playlist")
+      console.error("Error  adding song playlist",error)
       return false;
      }
   },[])

@@ -7,14 +7,24 @@ import {
  useMemo
 } from "react"
 
+// import {
+//     useAudioPlayer,
+//     useAudioPlayerStatus,
+//     setAudioModeAsync,
+//     useAudioPlaylist,
+//     useAudioPlaylistStatus,
+//     AudioSource
+// } from "expo-audio";
+
+
 import {
-    useAudioPlayer,
-    useAudioPlayerStatus,
-    setAudioModeAsync,
-    useAudioPlaylist,
-    useAudioPlaylistStatus,
-    AudioSource
-} from "expo-audio";
+  useAudioPlayer,
+  useAudioPlaylistStatus,
+  useAudioPlayerStatus,
+  setAudioModeAsync,
+  useAudioPlaylist,
+  AudioSource
+} from "@/modules/pixis-audio/src"
 
 import type {
     RadioStation

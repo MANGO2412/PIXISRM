@@ -1,6 +1,5 @@
 
 import {View,StyleSheet,ScrollView} from "react-native"
-
 import {Text} from "@/components/ui"
 import {GlobalContext} from "@/context/reduceContext"
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -12,9 +11,6 @@ export default function search(){
    const {state,dispatch}=useContext(GlobalContext)
    let navigation=useRouter()
    
-
-  
-
 
    return(
     <View style={styles.container}>
